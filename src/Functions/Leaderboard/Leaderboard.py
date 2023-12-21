@@ -6,7 +6,6 @@ from discord import app_commands
 
 from utils.guessr_scores_req import guessr_get_all_scores, guessr_get_score
 from utils.discord_utils import make_embed, make_file
-from utils.calculate_seconds_since_epoch import calculate_seconds_since_epoch
 from const import BOT_COLOR
 
 
@@ -40,9 +39,8 @@ class Leaderboard(commands.Cog):
                 return
 
             easy, medium, hard, veryhard = target_member_stat["scores"].values()
-            started_at = calculate_seconds_since_epoch(
-                target_member_stat["createdDate"]
-            )
+            started_at = target_member_stat["createdStamp"]
+
             embed = make_embed(
                 description=f"Stats for {target.mention}",
                 color=target.accent_color or BOT_COLOR,
@@ -77,9 +75,8 @@ class Leaderboard(commands.Cog):
             target_user = await self.bot.fetch_user(int(target_user_stat["userId"]))
 
             easy, medium, hard, veryhard = target_user_stat["scores"].values()
-            started_at = calculate_seconds_since_epoch(
-                target_member_stat["createdDate"]
-            )
+            started_at = target_member_stat["createdStamp"]
+
             embed = make_embed(
                 description=target_user.mention,
                 color=target_user.accent_color or BOT_COLOR,

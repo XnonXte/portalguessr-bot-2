@@ -70,9 +70,9 @@ class Guessr(commands.Cog):
 
         session_data = {
             # Data per session.
-            "solved_guessr": 0,
-            "unsolved_guessr": 0,
-            "session_skipped": 0,
+            "guessr_solved": 0,
+            "guessr_timeout": 0,
+            "guessr_skipped": 0,
             "session_users_participated": [],
             "session_users_correct": [],
             "session_stopped": False,
@@ -157,7 +157,7 @@ class Guessr(commands.Cog):
                             continue
 
                         if res_lower == "skip":
-                            session_data["session_skipped"] += 1
+                            session_data["guessr_skipped"] += 1
 
                             await res.reply(
                                 embed=make_embed(
@@ -201,7 +201,7 @@ class Guessr(commands.Cog):
                     guessr_data["guessr_answer_count"] += 1
 
                     if res_lower == guessr_answer:
-                        session_data["solved_guessr"] += 1
+                        session_data["guessr_solved"] += 1
                         session_data["session_users_correct"].append(res_name)
 
                         await update_user_score(res_id, guessr_difficulty)
@@ -224,7 +224,7 @@ class Guessr(commands.Cog):
                             )
                         )
 
-                        session_data["unsolved_guessr"] += 1
+                        session_data["guessr_timeout"] += 1
 
                         break
                 except asyncio.TimeoutError:
@@ -238,7 +238,7 @@ class Guessr(commands.Cog):
                         )
                     )
 
-                    session_data["unsolved_guessr"] += 1
+                    session_data["guessr_timeout"] += 1
 
                     break
 
@@ -259,9 +259,9 @@ class Guessr(commands.Cog):
             if len(session_data["session_users_participated"]) != 0
             else "No one participated :("
         )
-        guessr_solved_count = session_data["solved_guessr"]
-        guessr_unsolved_count = session_data["unsolved_guessr"]
-        guessr_skipped_count = session_data["session_skipped"]
+        guessr_solved_count = session_data["guessr_solved"]
+        guessr_unsolved_count = session_data["guessr_timeout"]
+        guessr_skipped_count = session_data["guessr_skipped"]
 
         await ctx.channel.send(
             embed=make_embed(
