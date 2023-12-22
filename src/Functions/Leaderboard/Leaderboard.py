@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from utils.guessr_scores_req import guessr_get_all_scores, guessr_get_score
-from utils.discord_utils import make_embed, make_file
+from utils.guessr.lb import get_all_scores, get_score
+from hooks.discord.use_discord import make_embed, make_file
 from const import BOT_COLOR
 
 
@@ -13,37 +13,35 @@ class Leaderboard(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="lb", description="Shows the leaderboard for guessr.")
+    @commands.hybrid_command(name="lb", description="Shows the current leaderboard.")
     @app_commands.describe(
-        target="Target a member the current server in the leaderboard",
-        target_id="Target a user in the leaderboard by their Discord's id.",
+        user="Targets a user the current server in the leaderboard",
+        user_id="Targets a user in the leaderboard by their Discord's id.",
     )
     async def lb(
         self,
         ctx: commands.Context,
-        target: Optional[discord.Member] = None,
-        target_id: Optional[str] = None,
+        user: Optional[discord.User] = None,
+        user_id: Optional[str] = None,
     ):
         await ctx.defer()
 
-        if target != None:
-            target_member_stat = await guessr_get_score(target.id)
+        if user != None:
+            target_member_stat = await get_score(user.id)
 
             if not target_member_stat:
                 await ctx.send(
-                    f"{target.name} is not in the leaderboard!",
+                    f"{user.mention} is not in the leaderboard!",
                     ephemeral=True,
-                    delete_after=3,
                 )
 
                 return
 
             easy, medium, hard, veryhard = target_member_stat["scores"].values()
             started_at = target_member_stat["createdStamp"]
-
             embed = make_embed(
-                description=f"Stats for {target.mention}",
-                color=target.accent_color or BOT_COLOR,
+                description=f"Stats for {user.mention}",
+                color=user.accent_color or BOT_COLOR,
             )
             embed.add_field(name="Easy", value=easy, inline=False)
             embed.add_field(name="Medium", value=medium, inline=False)
@@ -56,29 +54,26 @@ class Leaderboard(commands.Cog):
                 text="Keep playing to improve your stats!",
                 icon_url="attachment://icon.png",
             )
-            embed.set_author(name=target.name, icon_url=target.avatar.url)
+            embed.set_author(name=user.name, icon_url=user.avatar.url)
             icon = make_file("./src/assets/icon.png", "icon.png")
 
             await ctx.send(embed=embed, file=icon)
-        elif target_id != None:
-            target_user_stat = await guessr_get_score(target_id)
+        elif user_id != None:
+            target_user_stat = await get_score(user_id)
 
             if not target_user_stat:
                 await ctx.send(
-                    f"{target_id} is not in the leaderboard!",
+                    f"{user_id} is not in the leaderboard!",
                     ephemeral=True,
-                    delete_after=3,
                 )
 
                 return
 
             target_user = await self.bot.fetch_user(int(target_user_stat["userId"]))
-
             easy, medium, hard, veryhard = target_user_stat["scores"].values()
             started_at = target_member_stat["createdStamp"]
-
             embed = make_embed(
-                description=target_user.mention,
+                description=f"Stats for {user.mention}",
                 color=target_user.accent_color or BOT_COLOR,
             )
             embed.add_field(name="Easy", value=easy, inline=False)
@@ -88,19 +83,16 @@ class Leaderboard(commands.Cog):
             embed.add_field(
                 name="Started at", value=f"<t:{started_at}:f>", inline=False
             )
-
             embed.set_footer(
                 text="Keep playing to improve your stats!",
                 icon_url="attachment://icon.png",
             )
-            embed.set_author(
-                name=f"Stats for {target_user.name}", icon_url=target_user.avatar.url
-            )
+            embed.set_author(name=user.name, icon_url=target_user.avatar.url)
             icon = make_file("./src/assets/icon.png", "icon.png")
 
             await ctx.send(embed=embed, file=icon)
         else:
-            users_stat = await guessr_get_all_scores()
+            users_stat = await get_all_scores()
             sorted_users_stat = sorted(
                 users_stat,
                 reverse=True,
@@ -108,11 +100,13 @@ class Leaderboard(commands.Cog):
             )
             users_stat_entry = []
 
-            for rank, scores_datum in enumerate(sorted_users_stat, start=1):
-                user = await self.bot.fetch_user(int(scores_datum["userId"]))
-                easy, medium, hard, veryhard = scores_datum["scores"].values()
+            for rank, user_stat in enumerate(sorted_users_stat, start=1):
+                user_mention = (
+                    await self.bot.fetch_user(int(user_stat["userId"]))
+                ).mention
+                easy, medium, hard, veryhard = user_stat["scores"].values()
                 users_stat_entry.append(
-                    f"**{rank}.** `{user.name}` - {easy} easy, {medium} medium, {hard} hard, and {veryhard} very hard."
+                    f"**{rank}.** {user_mention} - ***{easy}*** easy, ***{medium}*** medium, ***{hard}*** hard, and ***{veryhard}*** very hard."
                 )
 
             lb_embed = make_embed("Leaderboard", "\n".join(users_stat_entry), BOT_COLOR)

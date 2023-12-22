@@ -1,6 +1,6 @@
 BOT_COLOR = "#cb3030"
 BOT_VERSION = "v0.0.1"
-GUESSR_CHAMBERS = [
+CHAMBERS = [
     "00",
     "01",
     "02",
@@ -25,16 +25,24 @@ GUESSR_CHAMBERS = [
     "e01",
     "e02",
 ]
-GUESSR_EASY_COLOR = "#4caf50"
-GUESSR_MEDIUM_COLOR = "#fedc56"
-GUESSR_HARD_COLOR = "#ff5733"
-GUESSR_VERY_HARD_COLOR = "#36cbd3"
-SERVER_URI = "https://portalguessr-api.cyclic.app"
-LIST_TEXT_MAP = {
+EASY_COLOR = "#4caf50"
+MEDIUM_COLOR = "#fedc56"
+HARD_COLOR = "#ff5733"
+VERY_HARD_COLOR = "#36cbd3"
+SERVER_URL = "https://portalguessr-api.cyclic.app"
+IMGBB_SERVER_URL = "https://api.imgbb.com/1/upload"
+GENERAL_COMMANDS = {
     "guess": "Starts a PortalGuessr game",
     "lb": "Shows the current leaderboard",
-    "list": "Shows the available command you can use",
+    "help": "Shows the available commands you can use",
     "submit": "Submits a chamber for the chance of getting added",
     "status": "Sees the submission status",
-    "history": "Checks the game's history",
+    "history": "Checks recent guessrs history",
 }
+OWNER_COMMANDS = {
+    "accept": "Accepts a pending submission",
+    "reject": "Rejects a pending submission",
+    "lb_add": "Adds a new stats to the leaderboard",
+    "lb_remove": "Removes an existing stats from the leaderboard.",
+}
+XNONXTE_USER_ID = 706330866267193344

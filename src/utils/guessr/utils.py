@@ -1,12 +1,12 @@
 from const import (
-    GUESSR_EASY_COLOR,
-    GUESSR_MEDIUM_COLOR,
-    GUESSR_HARD_COLOR,
-    GUESSR_VERY_HARD_COLOR,
+    EASY_COLOR,
+    MEDIUM_COLOR,
+    HARD_COLOR,
+    VERY_HARD_COLOR,
 )
 
 
-def guessr_diff_to_acronym(difficulty):
+def diff_to_acronym(difficulty):
     match difficulty:
         case "Easy":
             return "e"
@@ -20,7 +20,7 @@ def guessr_diff_to_acronym(difficulty):
             raise Exception("Unknown identifier.")
 
 
-def guessr_diff_to_expanded(difficulty):
+def diff_to_expanded(difficulty):
     match difficulty:
         case "e":
             return "Easy"
@@ -34,7 +34,7 @@ def guessr_diff_to_expanded(difficulty):
             raise Exception("Unknown identifier.")
 
 
-def guessr_find_mvp(array):
+def find_mvp(array):
     count_dict = {}
 
     for item in array:
@@ -42,7 +42,6 @@ def guessr_find_mvp(array):
             count_dict[item] += 1
         else:
             count_dict[item] = 1
-
     most_common_item = None
     max_count = 0
 
@@ -54,21 +53,21 @@ def guessr_find_mvp(array):
     return most_common_item
 
 
-def guessr_get_color(difficulty):
+def get_color(difficulty):
     match difficulty:
         case "Easy":
-            return GUESSR_EASY_COLOR
+            return EASY_COLOR
         case "Medium":
-            return GUESSR_MEDIUM_COLOR
+            return MEDIUM_COLOR
         case "Hard":
-            return GUESSR_HARD_COLOR
+            return HARD_COLOR
         case "Very Hard":
-            return GUESSR_VERY_HARD_COLOR
+            return VERY_HARD_COLOR
         case _:
             raise Exception("Unknown identifier.")
 
 
-def guessr_get_timeout(difficulty):
+def get_timeout(difficulty):
     match difficulty:
         case "Easy":
             return 10

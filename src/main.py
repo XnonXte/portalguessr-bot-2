@@ -1,3 +1,9 @@
+# TODO: Implement an elo system.
+# TODO: Add owner-only commands.
+# TODO: Daily PortalGuessr would be so cool!
+# TODO: Auto assigned roles for top guessrs?
+# TODO: Migrate into using pipenv.
+
 import os
 from typing import Literal, Optional
 
@@ -9,9 +15,10 @@ from misc.replit import keep_alive
 
 load_dotenv("./config.env")
 
-TOKEN = os.getenv("TOKEN")
-PREFIX = commands.when_mentioned_or(os.getenv("PREFIX"))
-STATUS = os.getenv("STATUS")
+PREFIX = os.getenv("PREFIX")
+BOT_TOKEN = os.getenv("TOKEN")
+BOT_PREFIX = commands.when_mentioned_or(PREFIX)
+BOT_STATUS = os.getenv("STATUS")
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -27,7 +34,7 @@ class PortalGuessr2(commands.Bot):
                     )  # Excluding .py
 
 
-bot = PortalGuessr2(command_prefix=PREFIX, intents=intents)
+bot = PortalGuessr2(command_prefix=BOT_PREFIX, intents=intents, help_command=None)
 
 
 @bot.event
@@ -35,7 +42,7 @@ async def on_ready():
     print(f"We have logged in as {bot.user}!")
 
     await bot.change_presence(
-        activity=discord.Activity(type=discord.ActivityType.playing, name=STATUS)
+        activity=discord.Activity(type=discord.ActivityType.playing, name=BOT_STATUS)
     )
 
 
@@ -43,7 +50,9 @@ async def on_ready():
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     # Error handler.
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send(f"Unknown command: `{ctx.message.content.strip(PREFIX)}`")
+        await ctx.send(f"Unknown command: `{ctx.message.content[len(PREFIX):]}`")
+    if isinstance(error, commands.NotOwner):
+        await ctx.send("Forbidden command! You're not the owner of this bot!")
     else:
         raise error
 
@@ -56,6 +65,7 @@ async def sync(
     guilds: commands.Greedy[discord.Object],
     spec: Optional[Literal["~", "*", "^"]] = None,
 ) -> None:
+    # Command I stole from Github.
     if not guilds:
         if spec == "~":
             synced = await ctx.bot.tree.sync(guild=ctx.guild)
@@ -87,5 +97,4 @@ async def sync(
 
 
 keep_alive()
-
-bot.run(TOKEN)
+bot.run(BOT_TOKEN)
