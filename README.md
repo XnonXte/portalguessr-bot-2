@@ -4,7 +4,8 @@ As the name implies, it's the second iteration of PortalGuessr, code rewritten w
 
 ## Installation
 
-Run `pip install -r requirements.txt` to install the required dependencies.
+- Run `install.bat` to create the virtual environment with the required dependencies (make sure you're selecting the correct Python interpreter).
+- Create `config.env` file to store your own `TOKEN`, `PREFIX`, `STATUS`, and `IMGBB_API_KEY` variables. Get your imgbb's API key here: https://imgbb.com/
 
 ## Discord
 
