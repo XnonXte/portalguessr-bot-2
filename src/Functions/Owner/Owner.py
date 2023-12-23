@@ -1,15 +1,19 @@
+from typing import Optional
+
 import discord
 from discord.ext import commands
 from discord import app_commands
 
 from hooks.discord.use_discord import make_embed
 from utils.guessr.lb import add_score, remove_score
+from utils.owner.check_id import check_is_owner
+from utils.submission.submit import update_submission, accept_submission
 from const import (
     OWNER_USER_ID,
     BOT_COLOR,
-    BOT_MAKE_ICON,
     DEFAULT_FOOTER_TEXT,
 )
+from utils.bot.utils import bot_make_icon
 
 
 class MyCog(commands.Cog):
@@ -36,11 +40,7 @@ class MyCog(commands.Cog):
         hard_count: int,
         very_hard_count: int,
     ):
-        if ctx.author.id != OWNER_USER_ID:
-            raise commands.NotOwner(
-                f"Author's ID ({ctx.author.id}) is not equal to {OWNER_USER_ID}"
-            )
-
+        await check_is_owner(ctx.author.id, OWNER_USER_ID)
         await ctx.defer()
 
         data = {
@@ -60,35 +60,33 @@ class MyCog(commands.Cog):
                 "Success!", f"Stats for {user_mention} has been created!", BOT_COLOR
             )
             embed.set_footer(
-                text=f"MongoDB ID: {result['_id']}", icon_url="attachment://icon.png"
+                text=f"Database ID: {result['_id']}", icon_url="attachment://icon.png"
             )
 
-            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
+            await ctx.send(embed=embed, file=bot_make_icon())
         except Exception as e:
-            print(e)
             await ctx.send(
-                f"Failed to add `{user_id}` stats to the leaderboard!",
-                ephemeral=True,
+                embed=make_embed(
+                    "Failed while adding user stats to the leaderboard",
+                    f"```{e}```",
+                    "#ff0000",
+                )
             )
 
     @commands.hybrid_command(
-        help="lb_rm",
+        name="lb_rm",
         description="Removes an existing stats from the leaderboard (owner only command).",
     )
     @app_commands.describe(user_id="The target's user ID on Discord.")
     async def lb_rm(self, ctx, user_id: str):
-        if ctx.author.id != OWNER_USER_ID:
-            raise commands.NotOwner(
-                f"Author's ID ({ctx.author.id}) is not equal to {OWNER_USER_ID}"
-            )
-
+        await check_is_owner(ctx.author.id, OWNER_USER_ID)
         await ctx.defer()
 
         try:
             result = await remove_score(int(user_id))
             if result["deletedCount"] == 0:
                 await ctx.send(
-                    f"Stats for user with ID: {user_id} does not exist!", ephemeral=True
+                    f"Not found stats with user ID: {user_id}!", ephemeral=True
                 )
 
                 return
@@ -102,12 +100,91 @@ class MyCog(commands.Cog):
             )
             embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
-            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
+            await ctx.send(embed=embed, file=bot_make_icon())
         except Exception as e:
-            print(e)
             await ctx.send(
-                f"Failed to remove `{user_id}` stats from the leaderboard!",
-                ephemeral=True,
+                embed=make_embed(
+                    "Failed while removing user stats from the leaderboard",
+                    f"```{e}```",
+                    "#ff0000",
+                )
+            )
+
+    @commands.hybrid_command(
+        name="reject", description="Rejects a pending submission (owner only command)."
+    )
+    @app_commands.describe(
+        submission_id="Target a submission to reject with its ID.",
+        reason="The reason for rejection.",
+    )
+    async def reject(
+        self, ctx, submission_id: str, reason: Optional[str] = "No reason specified."
+    ):
+        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        await ctx.defer()
+
+        try:
+            result = await update_submission(submission_id, "rejected")
+
+            if not result:
+                await ctx.send(
+                    f"Not found submission ID: {submission_id}!",
+                    ephemeral=True,
+                )
+
+                return
+
+            submitter = result["submitter"]
+            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
+
+            embed = make_embed(None, f"Submission ID: `{submission_id}`", BOT_COLOR)
+            embed.add_field(name="Reason", value=reason)
+            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
+
+            await ctx.send(
+                f"{submitter_mention} your submission has been rejected! Better luck next time!",
+                embed=embed,
+                file=bot_make_icon(),
+            )
+        except Exception as e:
+            await ctx.send(
+                embed=make_embed(
+                    "Failed while rejecting a submission!",
+                    f"```{e}```",
+                    "#ff0000",
+                )
+            )
+
+    @commands.hybrid_command(
+        name="accept", description="Accepts a pending submission (owner only command)."
+    )
+    @app_commands.describe(submission_id="Target a submission to accept with its ID.")
+    async def accept(self, ctx, submission_id: str):
+        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        await ctx.defer()
+
+        try:
+            result = await accept_submission(submission_id)
+
+            submitter, chamber_id = result["submitter"], result["fileId"]
+            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
+
+            embed = make_embed(None, f"Submission ID: `{submission_id}`", BOT_COLOR)
+            embed.add_field(name="Chamber ID", value=chamber_id)
+            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
+
+            await ctx.send(
+                f"{submitter_mention} your submission has been accepted! Thank you for your contribution!",
+                embed=embed,
+                file=bot_make_icon(),
+            )
+        except Exception as e:
+            await ctx.send(
+                embed=make_embed(
+                    "Failed while accepting a submission!",
+                    f"```{e}```",
+                    "#ff0000",
+                )
             )
 
 

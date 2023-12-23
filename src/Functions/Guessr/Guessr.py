@@ -19,8 +19,9 @@ from utils.guessr.utils import (
     get_timeout,
 )
 from hooks.discord.use_discord import make_embed
+from utils.bot.utils import bot_make_icon
 from utils.guessr.history import add_history
-from const import BOT_COLOR, CHAMBERS, XNONXTE_USER_ID, BOT_MAKE_ICON, BOT_PREFIX
+from const import BOT_COLOR, CHAMBERS, XNONXTE_USER_ID
 
 
 class Guessr(commands.Cog):
@@ -133,10 +134,10 @@ class Guessr(commands.Cog):
 
             await ctx.send(
                 embed=embed,
-                file=BOT_MAKE_ICON(),
+                file=bot_make_icon(),
             ) if round == 1 else await ctx.channel.send(
                 embed=embed,
-                file=BOT_MAKE_ICON(),
+                file=bot_make_icon(),
             )
 
             while True:
@@ -264,12 +265,12 @@ class Guessr(commands.Cog):
         solved_count = game_log["solved"]
         unsolved_count = game_log["timeout"]
         skipped_count = game_log["skipped"]
-        history_id = None
+        game_id = None
         user_mvp = find_mvp(game_log["user_ids_correct"]) or ""
 
         try:
             # Saving game result to the database.
-            history_id = await add_history(
+            game_id = await add_history(
                 total_chambers,
                 solved_count,
                 unsolved_count,
@@ -312,9 +313,7 @@ class Guessr(commands.Cog):
             else "No one participated :("
         )
         footer_text = (
-            f"Game has been recorded! Try {BOT_PREFIX}history {history_id}"
-            if history_id != None
-            else "This game is not recorded!"
+            f"Game ID: {game_id}" if game_id != None else "This game is not recorded!"
         )
 
         embed_stats = make_embed(
@@ -327,7 +326,7 @@ class Guessr(commands.Cog):
             icon_url="attachment://icon.png",
         )
 
-        await ctx.channel.send(embed=embed_stats, file=BOT_MAKE_ICON())
+        await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
 
         self.channels_running.remove(channel_id)
 

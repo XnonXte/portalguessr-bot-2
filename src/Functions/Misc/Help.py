@@ -5,10 +5,9 @@ from const import (
     GENERAL_COMMANDS,
     OWNER_COMMANDS,
     BOT_COLOR,
-    BOT_MAKE_ICON,
-    XNONXTE_USER_ID,
     DEFAULT_FOOTER_TEXT,
 )
+from utils.bot.utils import bot_make_icon
 
 
 class Help(commands.Cog):
@@ -19,7 +18,6 @@ class Help(commands.Cog):
         name="help", description="Shows the available commands you can use."
     )
     async def help(self, ctx: commands.Context):
-        xnonxte_mention = (await self.bot.fetch_user(XNONXTE_USER_ID)).mention
         general_commands_entry = [
             f"`{key}` - {GENERAL_COMMANDS[key]}" for key in GENERAL_COMMANDS
         ]
@@ -29,7 +27,7 @@ class Help(commands.Cog):
 
         embed = make_embed(
             "PortalGuessr Help",
-            f"PortalGuessr is a quiz for guessing the map in Portal - DM me for feedback {xnonxte_mention}.",
+            f"Some command might now work properly when invoked with the prefix command, it's recommended to use the slash command instead!",
             BOT_COLOR,
         )
         embed.add_field(
@@ -44,7 +42,7 @@ class Help(commands.Cog):
         )
         embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
-        await ctx.send(embed=embed, file=BOT_MAKE_ICON())
+        await ctx.send(embed=embed, file=bot_make_icon(), ephemeral=True)
 
 
 async def setup(bot):

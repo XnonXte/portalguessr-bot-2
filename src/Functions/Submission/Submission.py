@@ -9,10 +9,14 @@ from utils.submission.submit import (
     submit_submission,
     read_one_submission,
     read_submission,
+    read_submission_by_status,
 )
-from utils.guessr.utils import get_color
+
+from utils.owner.check_server import check_is_testing_server
 from hooks.discord.use_discord import make_embed
-from const import BOT_COLOR, BOT_VERSION, BOT_MAKE_ICON
+from utils.bot.utils import bot_make_icon
+from utils.submission.utils import get_color_by_status
+from const import BOT_COLOR, BOT_VERSION, TESTING_SERVER_ID
 
 
 class Submission(commands.Cog):
@@ -20,7 +24,7 @@ class Submission(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(
-        name="submit", description="Submits a chamber for the chance of getting added"
+        name="submit", description="Submits a chamber for the chance of getting added."
     )
     @app_commands.describe(
         image="The image to submit (must be a valid image file!)",
@@ -66,6 +70,7 @@ class Submission(commands.Cog):
 
             return
 
+        await check_is_testing_server(ctx.guild.id, TESTING_SERVER_ID)
         await ctx.defer()
 
         uploaded_image_url = upload_image(image.url, image.filename)
@@ -80,79 +85,102 @@ class Submission(commands.Cog):
                 "Success!",
                 f"Your submission is required to be checked first before it gets added to the game, we will notify you when there's an updated. Thanks for contributing! {ctx.author.mention}",
                 BOT_COLOR,
-            ).set_footer(text=f"ID: {submission_id}", icon_url="attachment://icon.png"),
-            file=BOT_MAKE_ICON(),
+            ).set_footer(
+                text=f"Submission ID: {submission_id}", icon_url="attachment://icon.png"
+            ),
+            file=bot_make_icon(),
         )
 
     @commands.hybrid_command(
-        name="status", description="Checks the status of the current submissions."
+        name="submissions", description="Checks submissions status."
     )
     @app_commands.describe(
-        submission_id="Shows the detail for a specific submission with its ID."
+        submission_id="Shows the detail for a specific submission with its ID.",
+        status="Searches submissions by their status.",
     )
-    async def status(self, ctx, submission_id: Optional[str] = ""):
+    async def submissions(
+        self,
+        ctx,
+        submission_id: Optional[str] = "",
+        status: Optional[Literal["Pending", "Accepted", "Rejected"]] = "",
+    ):
+        await ctx.defer()
+
         if submission_id:
-            target_submission = await read_one_submission(submission_id)
-            if not target_submission:
+            submission = await read_one_submission(submission_id)
+
+            if not submission:
                 await ctx.send(
-                    f"Submission with ID `{submission_id}` does not exist in the database!",
+                    f"Submission ID: `{submission_id}` does not exist in the database!",
                     ephemeral=True,
                 )
-
                 return
 
-            status = target_submission["status"]
-            difficulty = target_submission["difficulty"]
-            submitter = target_submission["submitter"]
-            url = target_submission["url"]
-            submitted_at = target_submission["createdStamp"]
-
-            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
+            submitter_mention = (
+                await self.bot.fetch_user(int(submission["submitter"]))
+            ).mention
 
             embed = make_embed(
                 None,
-                f"Details for submission with ID: `{submission_id}`",
-                get_color(difficulty),
+                f"`{submission_id}` submission details",
+                get_color_by_status(submission["status"]),
             )
-            embed.add_field(name="Status", value=status.capitalize())
-            embed.add_field(name="Difficulty", value=difficulty)
+            embed.add_field(name="Status", value=submission["status"].capitalize())
+            embed.add_field(name="Difficulty", value=submission["difficulty"])
             embed.add_field(name="Submitted by", value=submitter_mention)
-            embed.add_field(name="Submitted at", value=f"<t:{submitted_at}:f>")
-            embed.set_image(url=url)
+            embed.add_field(
+                name="Submitted at", value=f"<t:{submission['createdStamp']}:f>"
+            )
+            embed.set_image(url=submission["url"])
             embed.set_footer(
                 text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
             )
 
-            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
+            await ctx.send(embed=embed, file=bot_make_icon())
+
+            return
+        elif status:
+            submissions = await read_submission_by_status(status.lower())
+            submissions_entry = []
+
+            for index, submission in enumerate(reversed(submissions), start=1):
+                submitter_mention = (
+                    await self.bot.fetch_user(int(submission["submitter"]))
+                ).mention
+                submissions_entry.append(
+                    f"{index}. `{submission['submissionId']}` - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | Submitted by {submitter_mention} at <t:{submission['createdStamp']}:f>"
+                )
+
+            embed = make_embed(
+                "Submissions", "\n".join(submissions_entry) or "Empty :(", BOT_COLOR
+            )
+            embed.set_footer(
+                text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
+            )
+
+            await ctx.send(embed=embed, file=bot_make_icon())
 
             return
 
         submissions = await read_submission()
-        submissions_descending = reversed(submissions)
         submissions_entry = []
 
-        for index, submission in enumerate(submissions_descending, start=1):
-            status = submission["status"]
-            difficulty = submission["difficulty"]
-            submitter = submission["submitter"]
-            url = submission["url"]
-            submission_id = submission["submissionId"]
-            submitted_at = submission["createdStamp"]
-
-            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
-
+        for index, submission in enumerate(reversed(submissions), start=1):
+            submitter_mention = (
+                await self.bot.fetch_user(int(submission["submitter"]))
+            ).mention
             submissions_entry.append(
-                f"{index}. `{submission_id}` - **{status.capitalize()}** status, **{difficulty}** difficulty | Submitted by {submitter_mention} at <t:{submitted_at}:f>"
+                f"{index}. `{submission['submissionId']}` - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | Submitted by {submitter_mention} at <t:{submission['createdStamp']}:f>"
             )
 
         embed = make_embed(
-            "Submissions Status", "\n".join(submissions_entry), BOT_COLOR
+            "Submissions Status", "\n".join(submissions_entry) or "Empty :(", BOT_COLOR
         )
         embed.set_footer(
             text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
         )
 
-        await ctx.send(embed=embed, file=BOT_MAKE_ICON())
+        await ctx.send(embed=embed, file=bot_make_icon())
 
 
 async def setup(bot):
