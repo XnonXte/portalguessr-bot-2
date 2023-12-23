@@ -7,4 +7,6 @@ async def use_aiohttp(url, method="GET", data=None):
             if response.status < 400:
                 return await response.json()
             else:
-                raise Exception(f"Response status > 400 - {await response.json()}")
+                raise Exception(
+                    f"Response status at 400 or higher - {await response.json()}"
+                )

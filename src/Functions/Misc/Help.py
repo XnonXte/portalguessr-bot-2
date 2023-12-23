@@ -1,12 +1,13 @@
 from discord.ext import commands
 
-from hooks.discord.use_discord import make_embed, make_file
+from hooks.discord.use_discord import make_embed
 from const import (
     GENERAL_COMMANDS,
     OWNER_COMMANDS,
     BOT_COLOR,
-    BOT_VERSION,
+    BOT_MAKE_ICON,
     XNONXTE_USER_ID,
+    DEFAULT_FOOTER_TEXT,
 )
 
 
@@ -28,7 +29,7 @@ class Help(commands.Cog):
 
         embed = make_embed(
             "PortalGuessr Help",
-            f"PortalGuessr is a quiz for guessing the map in Portal, made by {xnonxte_mention} - Constructive feedbacks are appreciated!",
+            f"PortalGuessr is a quiz for guessing the map in Portal - DM me for feedback {xnonxte_mention}.",
             BOT_COLOR,
         )
         embed.add_field(
@@ -41,11 +42,9 @@ class Help(commands.Cog):
             value="\n".join(owner_commands_entry),
             inline=False,
         )
-        embed.set_footer(
-            text=f"PortalGuessr 2 {BOT_VERSION}", icon_url="attachment://icon.png"
-        )
+        embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
-        await ctx.send(embed=embed, file=make_file("./src/assets/icon.png", "icon.png"))
+        await ctx.send(embed=embed, file=BOT_MAKE_ICON())
 
 
 async def setup(bot):

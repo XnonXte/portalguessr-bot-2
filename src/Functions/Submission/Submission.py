@@ -11,8 +11,8 @@ from utils.submission.submit import (
     read_submission,
 )
 from utils.guessr.utils import get_color
-from hooks.discord.use_discord import make_embed, make_file
-from const import BOT_COLOR, BOT_VERSION
+from hooks.discord.use_discord import make_embed
+from const import BOT_COLOR, BOT_VERSION, BOT_MAKE_ICON
 
 
 class Submission(commands.Cog):
@@ -75,15 +75,13 @@ class Submission(commands.Cog):
             )
         )["submissionId"]
 
-        icon = make_file("./src/assets/icon.png", "icon.png")
-
         await ctx.send(
             embed=make_embed(
                 "Success!",
                 f"Your submission is required to be checked first before it gets added to the game, we will notify you when there's an updated. Thanks for contributing! {ctx.author.mention}",
                 BOT_COLOR,
             ).set_footer(text=f"ID: {submission_id}", icon_url="attachment://icon.png"),
-            file=icon,
+            file=BOT_MAKE_ICON(),
         )
 
     @commands.hybrid_command(
@@ -125,9 +123,7 @@ class Submission(commands.Cog):
                 text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
             )
 
-            icon = make_file("./src/assets/icon.png", "icon.png")
-
-            await ctx.send(embed=embed, file=icon)
+            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
 
             return
 
@@ -146,7 +142,7 @@ class Submission(commands.Cog):
             submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
 
             submissions_entry.append(
-                f"**{index}.** `{submission_id}` - ***{status.capitalize()}*** status, ***{difficulty}*** difficulty | Submitted by {submitter_mention} at <t:{submitted_at}:f>"
+                f"{index}. `{submission_id}` - **{status.capitalize()}** status, **{difficulty}** difficulty | Submitted by {submitter_mention} at <t:{submitted_at}:f>"
             )
 
         embed = make_embed(
@@ -156,9 +152,7 @@ class Submission(commands.Cog):
             text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
         )
 
-        icon = make_file("./src/assets/icon.png", "icon.png")
-
-        await ctx.send(embed=embed, file=icon)
+        await ctx.send(embed=embed, file=BOT_MAKE_ICON())
 
 
 async def setup(bot):

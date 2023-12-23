@@ -5,8 +5,8 @@ from discord.ext import commands
 from discord import app_commands
 
 from utils.guessr.lb import get_all_scores, get_score
-from hooks.discord.use_discord import make_embed, make_file
-from const import BOT_COLOR
+from hooks.discord.use_discord import make_embed
+from const import BOT_COLOR, BOT_MAKE_ICON
 
 
 class Leaderboard(commands.Cog):
@@ -55,9 +55,8 @@ class Leaderboard(commands.Cog):
                 icon_url="attachment://icon.png",
             )
             embed.set_author(name=user.name, icon_url=user.avatar.url)
-            icon = make_file("./src/assets/icon.png", "icon.png")
 
-            await ctx.send(embed=embed, file=icon)
+            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
         elif user_id != None:
             target_user_stat = await get_score(user_id)
 
@@ -69,11 +68,11 @@ class Leaderboard(commands.Cog):
 
                 return
 
-            target_user = await self.bot.fetch_user(int(target_user_stat["userId"]))
+            target_user = await self.bot.fetch_user(int(user_id))
             easy, medium, hard, veryhard = target_user_stat["scores"].values()
-            started_at = target_member_stat["createdStamp"]
+            started_at = target_user_stat["createdStamp"]
             embed = make_embed(
-                description=f"Stats for {user.mention}",
+                description=f"Stats for {target_user.mention}",
                 color=target_user.accent_color or BOT_COLOR,
             )
             embed.add_field(name="Easy", value=easy, inline=False)
@@ -87,10 +86,9 @@ class Leaderboard(commands.Cog):
                 text="Keep playing to improve your stats!",
                 icon_url="attachment://icon.png",
             )
-            embed.set_author(name=user.name, icon_url=target_user.avatar.url)
-            icon = make_file("./src/assets/icon.png", "icon.png")
+            embed.set_author(name=target_user.name, icon_url=target_user.avatar.url)
 
-            await ctx.send(embed=embed, file=icon)
+            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
         else:
             users_stat = await get_all_scores()
             sorted_users_stat = sorted(
@@ -106,7 +104,7 @@ class Leaderboard(commands.Cog):
                 ).mention
                 easy, medium, hard, veryhard = user_stat["scores"].values()
                 users_stat_entry.append(
-                    f"**{rank}.** {user_mention} - ***{easy}*** easy, ***{medium}*** medium, ***{hard}*** hard, and ***{veryhard}*** very hard."
+                    f"{rank}. {user_mention} - **{easy}** easy, **{medium}** medium, **{hard}** hard, and **{veryhard}** very hard."
                 )
 
             lb_embed = make_embed("Leaderboard", "\n".join(users_stat_entry), BOT_COLOR)
@@ -114,9 +112,8 @@ class Leaderboard(commands.Cog):
                 text=f"There are {len(users_stat)} users in the leaderboard!",
                 icon_url="attachment://icon.png",
             )
-            icon = make_file("./src/assets/icon.png", "icon.png")
 
-            await ctx.send(embed=lb_embed, file=icon)
+            await ctx.send(embed=lb_embed, file=BOT_MAKE_ICON())
 
 
 async def setup(bot):

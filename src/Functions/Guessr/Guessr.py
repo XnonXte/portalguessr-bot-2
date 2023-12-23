@@ -18,9 +18,9 @@ from utils.guessr.utils import (
     get_color,
     get_timeout,
 )
-from hooks.discord.use_discord import make_embed, make_file
+from hooks.discord.use_discord import make_embed
 from utils.guessr.history import add_history
-from const import BOT_COLOR, CHAMBERS, XNONXTE_USER_ID
+from const import BOT_COLOR, CHAMBERS, XNONXTE_USER_ID, BOT_MAKE_ICON, BOT_PREFIX
 
 
 class Guessr(commands.Cog):
@@ -31,7 +31,7 @@ class Guessr(commands.Cog):
     @commands.hybrid_command(name="guess", description="Starts a PortalGuessr game.")
     @app_commands.describe(
         difficulty="The desired difficulty (leave blank to keep it random).",
-        rounds="The amount of rounds in a session.",
+        rounds="The amount of rounds in a session (max: 50).",
     )
     async def guess(
         self,
@@ -50,17 +50,27 @@ class Guessr(commands.Cog):
                 and message.content.lower() in CHAMBERS + ["skip", "stop"]
             )
 
-        if rounds <= 0:
-            await ctx.send(
-                "The amount of rounds must be higher than 0!",
-                ephemeral=True,
-            )
-            return
         if channel_id in self.channels_running:
             await ctx.send(
                 f"A game is already running in {ctx.channel.mention}. Please wait for it to finish or start another instance in a different channel!",
                 ephemeral=True,
             )
+
+            return
+
+        if rounds <= 0:
+            await ctx.send(
+                "The amount of rounds must be higher than 0!",
+                ephemeral=True,
+            )
+
+            return
+        elif rounds > 50:
+            await ctx.send(
+                "You're exceeding the rounds limit! I'm not sure if you can finish that many...",
+                ephemeral=True,
+            )
+
             return
 
         await ctx.defer()  # Defer the command.
@@ -72,10 +82,11 @@ class Guessr(commands.Cog):
                 else await get_random_chambers(rounds)
             )
         except Exception as e:
+            print(e)
             await ctx.send(
                 embed=make_embed(
                     "Uh Oh...",
-                    f"Failed while fetching data from the server, please contact {user_xnonxte.mention}! Cause: {e}",
+                    f"Failed while fetching data from the server, please contact {user_xnonxte.mention}!",
                     BOT_COLOR,
                 )
             )
@@ -122,10 +133,10 @@ class Guessr(commands.Cog):
 
             await ctx.send(
                 embed=embed,
-                file=make_file("./src/assets/icon.png", "icon.png"),
+                file=BOT_MAKE_ICON(),
             ) if round == 1 else await ctx.channel.send(
                 embed=embed,
-                file=make_file("./src/assets/icon.png", "icon.png"),
+                file=BOT_MAKE_ICON(),
             )
 
             while True:
@@ -270,12 +281,13 @@ class Guessr(commands.Cog):
                 difficulty,
             )
         except Exception as e:
+            print(e)
             user_xnonxte = await self.bot.fetch_user(XNONXTE_USER_ID)
 
             await ctx.send(
                 embed=make_embed(
                     "Error Occurred!",
-                    f"Failed while uploading game result to the server, please contact {user_xnonxte.mention}! Cause: {e}",
+                    f"Failed while uploading game result to the server, please contact {user_xnonxte.mention}!",
                     BOT_COLOR,
                 )
             )
@@ -299,6 +311,11 @@ class Guessr(commands.Cog):
             if len(game_log["user_ids_participated"]) != 0
             else "No one participated :("
         )
+        footer_text = (
+            f"Game has been recorded! Try {BOT_PREFIX}history {history_id}"
+            if history_id != None
+            else "This game is not recorded!"
+        )
 
         embed_stats = make_embed(
             "Game Result",
@@ -306,15 +323,11 @@ class Guessr(commands.Cog):
             BOT_COLOR,
         )
         embed_stats.set_footer(
-            text=f"Game has been recorded! Try /history <{history_id}>"
-            if history_id != None
-            else "Unfortunately this game is not recorded, please try again later!",
+            text=footer_text,
             icon_url="attachment://icon.png",
         )
 
-        await ctx.channel.send(
-            embed=embed_stats, file=make_file("./src/assets/icon.png", "icon.png")
-        )
+        await ctx.channel.send(embed=embed_stats, file=BOT_MAKE_ICON())
 
         self.channels_running.remove(channel_id)
 

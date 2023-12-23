@@ -4,9 +4,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed, make_file
+from hooks.discord.use_discord import make_embed
 from utils.guessr.history import read_history, read_one_history
-from const import BOT_COLOR, BOT_VERSION
+from const import BOT_COLOR, BOT_MAKE_ICON, DEFAULT_FOOTER_TEXT
 
 
 class History(commands.Cog):
@@ -31,8 +31,6 @@ class History(commands.Cog):
                     solved,
                     timeout,
                     skipped,
-                    mvp,
-                    participators,
                     prompterUserId,
                     history_id,
                     difficulty,
@@ -41,20 +39,13 @@ class History(commands.Cog):
                     game["solved"],
                     game["timeout"],
                     game["skipped"],
-                    game["mvp"],
-                    game["participators"],
                     game["prompterUserId"],
                     game["historyId"],
                     game["difficulty"],
                 )
 
-                mvp_mention = (
-                    (await self.bot.fetch_user(int(mvp))).mention
-                    if mvp != ""
-                    else "None"
-                )
                 history_entry.append(
-                    f"**{index}.** `{history_id}` - ***{solved}*** solved, ***{timeout}*** timed out, ***{skipped}*** skipped, ***{total}*** total, ***{difficulty}*** difficulty, {mvp_mention} MVP, {len(participators)} participated"
+                    f"{index}. `{history_id}` - **{solved}** solved, **{timeout}** timed out, **{skipped}** skipped, **{total}** total, **{difficulty}** difficulty"
                 )
 
             embed = make_embed("Game History", "\n".join(history_entry), BOT_COLOR)
@@ -62,9 +53,8 @@ class History(commands.Cog):
                 text=f"PortalGuessr has been played {len(history)} times!",
                 icon_url="attachment://icon.png",
             )
-            icon = make_file("./src/assets/icon.png", "icon.png")
 
-            await ctx.send(embed=embed, file=icon)
+            await ctx.send(embed=embed, file=BOT_MAKE_ICON())
 
             return
 
@@ -101,8 +91,14 @@ class History(commands.Cog):
             game["createdStamp"],
         )
 
-        mvp_mention = (await self.bot.fetch_user(int(mvp))).mention
+        mvp_mention = None
         prompter = await self.bot.fetch_user(int(prompterUserId))
+
+        try:
+            mvp_mention = (await self.bot.fetch_user(int(mvp))).mention
+        except ValueError as e:
+            print(e)
+            pass
 
         embed = make_embed(
             None,
@@ -118,16 +114,12 @@ class History(commands.Cog):
         embed.add_field(name="Participated", value=len(participators))
         embed.add_field(name="Finished at", value=f"<t:{finished_at}:f>")
 
-        embed.set_footer(
-            text=f"PortalGuessr 2 {BOT_VERSION}", icon_url="attachment://icon.png"
-        )
+        embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
         embed.set_author(
             name=f"Started by {prompter.name}", icon_url=prompter.avatar.url
         )
 
-        icon = make_file("./src/assets/icon.png", "icon.png")
-
-        await ctx.send(embed=embed, file=icon)
+        await ctx.send(embed=embed, file=BOT_MAKE_ICON())
 
 
 async def setup(bot):
