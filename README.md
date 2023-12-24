@@ -5,7 +5,7 @@ This is a major rewrite of the original [PortalGuessr bot](https://github.com/Xn
 ## Installation
 
 - Download the latest release if available.
-- Run `install.bat` to install the required dependencies with Pipenv.
+- Run `pipenv install` to install the required dependencies with Pipenv.
 - Create a `config.env` file containing `TOKEN`, `API_KEY`, and `IMGBB_API_KEY` variables (get your own imgbb's API key at: https://imgbb.com/).
 - Fill in your own `OWNER_USER_ID` and `TESTING_SERVER_ID` in `./src/const.py` (must be a valid Discord IDs).
 - Run the environment with `pipenv run python ./src/main.py`.
