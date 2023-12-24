@@ -224,8 +224,8 @@ class Guessr(commands.Cog):
                     if res_lower == answer:
                         game_log["solved"] += 1
                         game_log["user_ids_correct"].append(str(res_id))
-                        await update_user_stats(res_id, guessr_difficulty)
                         await res.add_reaction("✅")
+                        await update_user_stats(res_id, guessr_difficulty)
 
                         break
                     else:

@@ -7,31 +7,29 @@ from const import (
 
 
 def diff_to_acronym(difficulty):
-    match difficulty:
-        case "Easy":
-            return "e"
-        case "Medium":
-            return "m"
-        case "Hard":
-            return "h"
-        case "Very Hard":
-            return "vh"
-        case _:
-            raise Exception("Unknown identifier.")
+    if difficulty == "Easy":
+        return "e"
+    elif difficulty == "Medium":
+        return "m"
+    elif difficulty == "Hard":
+        return "h"
+    elif difficulty == "Very Hard":
+        return "vh"
+    else:
+        raise Exception("Unknown identifier.")
 
 
 def diff_to_expanded(difficulty):
-    match difficulty:
-        case "e":
-            return "Easy"
-        case "m":
-            return "Medium"
-        case "h":
-            return "Hard"
-        case "vh":
-            return "Very Hard"
-        case _:
-            raise Exception("Unknown identifier.")
+    if difficulty == "e":
+        return "Easy"
+    elif difficulty == "m":
+        return "Medium"
+    elif difficulty == "h":
+        return "Hard"
+    elif difficulty == "vh":
+        return "Very Hard"
+    else:
+        raise Exception("Unknown identifier.")
 
 
 def find_mvp(array):
@@ -54,28 +52,26 @@ def find_mvp(array):
 
 
 def get_color(difficulty):
-    match difficulty:
-        case "Easy":
-            return EASY_COLOR
-        case "Medium":
-            return MEDIUM_COLOR
-        case "Hard":
-            return HARD_COLOR
-        case "Very Hard":
-            return VERY_HARD_COLOR
-        case _:
-            raise Exception("Unknown identifier.")
+    if difficulty == "Easy":
+        return EASY_COLOR
+    elif difficulty == "Medium":
+        return MEDIUM_COLOR
+    elif difficulty == "Hard":
+        return HARD_COLOR
+    elif difficulty == "Very Hard":
+        return VERY_HARD_COLOR
+    else:
+        raise Exception("Unknown identifier.")
 
 
 def get_timeout(difficulty):
-    match difficulty:
-        case "Easy":
-            return 10
-        case "Medium":
-            return 15
-        case "Hard":
-            return 20
-        case "Very Hard":
-            return 25
-        case _:
-            raise Exception("Unknown identifier.")
+    if difficulty == "Easy":
+        return 10
+    elif difficulty == "Medium":
+        return 15
+    elif difficulty == "Hard":
+        return 20
+    elif difficulty == "Very Hard":
+        return 25
+    else:
+        raise Exception("Unknown identifier.")

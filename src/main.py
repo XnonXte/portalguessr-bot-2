@@ -29,7 +29,6 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from misc.replit import keep_alive
 from hooks.discord.use_discord import make_embed
 from const import BOT_PREFIX, BOT_STATUS
 
@@ -125,5 +124,4 @@ async def sync(ctx: commands.Context, target: Optional[Literal["*", ".", "-"]] =
     )
 
 
-keep_alive()
 bot.run(BOT_TOKEN)

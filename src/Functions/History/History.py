@@ -34,7 +34,7 @@ class History(commands.Cog):
                 return
 
             mvp = await self.bot.fetch_user(int(game["mvp"]))
-            prompter = await self.bot.fetch_user(int(game["prompter"]))
+            prompter = await self.bot.fetch_user(int(game["prompterUserId"]))
 
             embed = make_embed(
                 None,

@@ -54,7 +54,7 @@ OWNER_COMMANDS = {
     "accept": "Accepts a pending submission",
     "reject": "Rejects a pending submission",
     "lb_add": "Adds a new stats to the leaderboard",
-    "lb_remove": "Removes an existing stats from the leaderboard.",
+    "lb_remove": "Removes an existing stats from the leaderboard",
 }
 DEFAULT_FOOTER_TEXT = f"PortalGuessr 2 {BOT_VERSION}"
 
