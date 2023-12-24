@@ -1,6 +1,6 @@
 # PortalGuessr 2
 
-This is a major rewrite of the original [PortalGuessr bot](https://github.com/XnonXte/PortalGuessr-Bot-2) - Featuring a lot more commands, more robust storage system, etc.
+This is a major rewrite of the original [PortalGuessr bot](https://github.com/XnonXte/PortalGuessr-Bot) - Featuring a lot more commands, more robust storage system, etc.
 
 ## Installation
 
