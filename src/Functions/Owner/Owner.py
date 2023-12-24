@@ -128,7 +128,7 @@ class MyCog(commands.Cog):
 
             if not result:
                 await ctx.send(
-                    f"Not found submission ID: {submission_id}!",
+                    f"Not found submission with ID `{submission_id}`!",
                     ephemeral=True,
                 )
 
@@ -137,7 +137,7 @@ class MyCog(commands.Cog):
             submitter = result["submitter"]
             submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
 
-            embed = make_embed(None, f"Submission ID: `{submission_id}`", BOT_COLOR)
+            embed = make_embed("Submission Rejected!", f"Submission with ID `{submission_id}` has been rejected!", BOT_COLOR)
             embed.add_field(name="Reason", value=reason)
             embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
@@ -166,11 +166,10 @@ class MyCog(commands.Cog):
         try:
             result = await accept_submission(submission_id)
 
-            submitter, chamber_id = result["submitter"], result["fileId"]
+            submitter, file_id = result["submitter"], result["fileId"]
             submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
 
-            embed = make_embed(None, f"Submission ID: `{submission_id}`", BOT_COLOR)
-            embed.add_field(name="Chamber ID", value=chamber_id)
+            embed = make_embed("Submission Accepted!", f"Submission with ID `{submission_id}` has been accepted! Chamber ID: {file_id}", BOT_COLOR)
             embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
             await ctx.send(

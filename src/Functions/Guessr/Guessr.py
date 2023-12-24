@@ -38,124 +38,174 @@ class Guessr(commands.Cog):
         difficulty: Optional[Literal["Easy", "Medium", "Hard", "Very Hard"]] = "Random",
         rounds: Optional[int] = 10,
     ):
-        prompter_id = ctx.author.id
-        channel_id = ctx.channel.id
-
-        def res_is_valid(message: discord.Message):
-            # Check the validity of the responder's message.
-            return (
-                message.guild.id == ctx.guild.id
-                and message.channel.id == channel_id
-                and message.content.lower() in CHAMBERS + ["skip", "stop"]
-            )
-
-        if channel_id in self.channels_running:
-            await ctx.send(
-                f"A game is already running in {ctx.channel.mention}. Please wait for it to finish or start another instance in a different channel!",
-                ephemeral=True,
-            )
-
-            return
-
-        if rounds <= 0:
-            await ctx.send(
-                "The amount of rounds must be higher than 0!",
-                ephemeral=True,
-            )
-
-            return
-        elif rounds > 25:
-            await ctx.send(
-                "You're exceeding the limit! I'm not sure if you can finish that many...",
-                ephemeral=True,
-            )
-
-            return
-
-        await ctx.defer()  # Defer the command.
-
         try:
-            chambers = (
-                await get_chambers(rounds, difficulty)
-                if difficulty != "Random"
-                else await get_random_chambers(rounds)
-            )
-        except Exception as e:
-            print(e)
-            await ctx.send(
-                embed=make_embed(
-                    "Uh Oh...",
-                    f"Failed while fetching data from the server, please contact {user_xnonxte.mention}!",
-                    BOT_COLOR,
+            prompter_id = ctx.author.id
+            channel_id = ctx.channel.id
+
+            def res_is_valid(message: discord.Message):
+                # Check the validity of the responder's message.
+                return (
+                    message.guild.id == ctx.guild.id
+                    and message.channel.id == channel_id
+                    and message.content.lower() in CHAMBERS + ["skip", "stop"]
                 )
-            )
 
-            return
+            if channel_id in self.channels_running:
+                await ctx.send(
+                    f"A game is already running in {ctx.channel.mention}. Please wait for it to finish or start another instance in a different channel!",
+                    ephemeral=True,
+                )
 
-        self.channels_running.append(channel_id)
-        game_log = {
-            # Data per session.
-            "solved": 0,
-            "timeout": 0,
-            "skipped": 0,
-            "user_ids_participated": [],
-            "user_ids_correct": [],
-        }
-        chambers_log = [chamber["fileId"] for chamber in chambers]
-        game_stopped = False
+                return
 
-        for round, chamber in enumerate(chambers, start=1):
-            image_url = chamber["url"]
-            answer = chamber["answer"]
-            guessr_difficulty = chamber["difficulty"]
+            if rounds <= 0:
+                await ctx.send(
+                    "The amount of rounds must be higher than 0!",
+                    ephemeral=True,
+                )
 
-            start_time = time.time()
-            elapsed_time = 0
-            timeout = get_timeout(guessr_difficulty)
+                return
+            elif rounds > 25:
+                await ctx.send(
+                    "You're exceeding the limit! I'm not sure if you can finish that many...",
+                    ephemeral=True,
+                )
 
-            data = {
-                # Data per guessr.
-                "user_ids_have_answered": [],
-                "answer_count": 0,
-                "answer_count_max": 5,
-            }
+                return
 
-            embed = make_embed(
-                title="Guess the chamber!",
-                color=get_color(guessr_difficulty),
-            )
-            embed.set_image(url=image_url)
-            embed.set_footer(
-                text=f"Round {round} of {rounds} - skip | stop",
-                icon_url="attachment://icon.png",
-            )
+            await ctx.defer()  # Defer the command.
 
-            await ctx.send(
-                embed=embed,
-                file=bot_make_icon(),
-            ) if round == 1 else await ctx.channel.send(
-                embed=embed,
-                file=bot_make_icon(),
-            )
-
-            while True:
-                try:
-                    res = await self.bot.wait_for(
-                        "message",
-                        check=res_is_valid,
-                        timeout=timeout - elapsed_time,
+            try:
+                chambers = (
+                    await get_chambers(rounds, difficulty)
+                    if difficulty != "Random"
+                    else await get_random_chambers(rounds)
+                )
+            except Exception as e:
+                print(e)
+                await ctx.send(
+                    embed=make_embed(
+                        "Uh Oh...",
+                        f"Failed while fetching data from the server, please contact {user_xnonxte.mention}!",
+                        BOT_COLOR,
                     )
+                )
 
-                    res_lower = res.content.lower()
-                    res_id = res.author.id
+                return
 
-                    if res_lower in ["skip", "stop"]:
-                        if res_id != prompter_id:
-                            # Responder must be the prompter.
+            self.channels_running.append(channel_id)
+            game_log = {
+                # Data per session.
+                "solved": 0,
+                "timeout": 0,
+                "skipped": 0,
+                "user_ids_participated": [],
+                "user_ids_correct": [],
+            }
+            chambers_log = [chamber["fileId"] for chamber in chambers]
+            game_stopped = False
+
+            for round, chamber in enumerate(chambers, start=1):
+                image_url = chamber["url"]
+                answer = chamber["answer"]
+                guessr_difficulty = chamber["difficulty"]
+
+                start_time = time.time()
+                elapsed_time = 0
+                timeout = get_timeout(guessr_difficulty)
+
+                data = {
+                    # Data per guessr.
+                    "user_ids_have_answered": [],
+                    "answer_count": 0,
+                    "answer_count_max": 5,
+                }
+
+                embed = make_embed(
+                    title="Guess the chamber!",
+                    color=get_color(guessr_difficulty),
+                )
+                embed.set_image(url=image_url)
+                embed.set_footer(
+                    text=f"Round {round} of {rounds} - skip | stop",
+                    icon_url="attachment://icon.png",
+                )
+
+                await ctx.send(
+                    embed=embed,
+                    file=bot_make_icon(),
+                ) if round == 1 else await ctx.channel.send(
+                    embed=embed,
+                    file=bot_make_icon(),
+                )
+
+                while True:
+                    try:
+                        res = await self.bot.wait_for(
+                            "message",
+                            check=res_is_valid,
+                            timeout=timeout - elapsed_time,
+                        )
+
+                        res_lower = res.content.lower()
+                        res_id = res.author.id
+
+                        if res_lower in ["skip", "stop"]:
+                            if res_id != prompter_id:
+                                # Responder must be the prompter.
+                                await res.reply(
+                                    embed=make_embed(
+                                        title="You're not allowed to use this command!",
+                                        description="Only the user prompted this guessr is eligible to use this command.",
+                                        color=BOT_COLOR,
+                                    ),
+                                    delete_after=3,
+                                    mention_author=False,
+                                )
+
+                                continue
+
+                            if res_lower == "skip":
+                                game_log["skipped"] += 1
+
+                                await res.reply(
+                                    embed=make_embed(
+                                        title="Guessr Skipped!", color=BOT_COLOR
+                                    ),
+                                    mention_author=False,
+                                )
+
+                                break
+                            elif res_lower == "stop":
+                                if round == 1:
+                                    await res.reply(
+                                        embed=make_embed(
+                                            title="Finish the first round first to stop the game!",
+                                            color=BOT_COLOR,
+                                        ),
+                                        mention_author=False,
+                                    )
+
+                                    continue
+
+                                game_stopped = True
+                                await res.reply(
+                                    embed=make_embed(
+                                        title="Guessr Stopped!", color=BOT_COLOR
+                                    ),
+                                    mention_author=False,
+                                )
+
+                                break
+
+                        if (
+                            # If the responder has responded once.
+                            res_id
+                            in data["user_ids_have_answered"]
+                        ):
                             await res.reply(
                                 embed=make_embed(
-                                    title="You're not allowed to use this command!",
-                                    description="Only the user prompted this guessr is eligible to use this command.",
+                                    title="You have answered!",
                                     color=BOT_COLOR,
                                 ),
                                 delete_after=3,
@@ -164,169 +214,125 @@ class Guessr(commands.Cog):
 
                             continue
 
-                        if res_lower == "skip":
-                            game_log["skipped"] += 1
+                        if str(res_id) not in game_log["user_ids_participated"]:
+                            game_log["user_ids_participated"].append(str(res_id))
 
-                            await res.reply(
-                                embed=make_embed(
-                                    title="Guessr Skipped!", color=BOT_COLOR
-                                ),
-                                mention_author=False,
-                            )
+                        data["user_ids_have_answered"].append(res_id)
+                        data["answer_count"] += 1
+
+                        if res_lower == answer:
+                            game_log["solved"] += 1
+                            game_log["user_ids_correct"].append(str(res_id))
+                            await res.add_reaction("✅")
+                            await update_user_stats(res_id, guessr_difficulty)
 
                             break
-                        elif res_lower == "stop":
-                            if round == 1:
-                                await res.reply(
-                                    embed=make_embed(
-                                        title="Finish the first round first to stop the game!",
-                                        color=BOT_COLOR,
-                                    ),
-                                    mention_author=False,
+                        else:
+                            await res.add_reaction("❌")
+
+                        if data["answer_count"] >= data["answer_count_max"]:
+                            # After 5 respondent.
+                            await ctx.channel.send(
+                                embed=make_embed(
+                                    title="Game Finished!",
+                                    description=f"5 users have attempted at guessing this chamber, but no one got it right!\nThe chamber is {answer}!",
+                                    color=BOT_COLOR,
                                 )
-
-                                continue
-
-                            game_stopped = True
-                            await res.reply(
-                                embed=make_embed(
-                                    title="Guessr Stopped!", color=BOT_COLOR
-                                ),
-                                mention_author=False,
                             )
+                            game_log["timeout"] += 1
 
                             break
-
-                    if (
-                        # If the responder has responded once.
-                        res_id
-                        in data["user_ids_have_answered"]
-                    ):
-                        await res.reply(
-                            embed=make_embed(
-                                title="You have answered!",
-                                color=BOT_COLOR,
-                            ),
-                            delete_after=3,
-                            mention_author=False,
-                        )
-
-                        continue
-
-                    if str(res_id) not in game_log["user_ids_participated"]:
-                        game_log["user_ids_participated"].append(str(res_id))
-
-                    data["user_ids_have_answered"].append(res_id)
-                    data["answer_count"] += 1
-
-                    if res_lower == answer:
-                        game_log["solved"] += 1
-                        game_log["user_ids_correct"].append(str(res_id))
-                        await res.add_reaction("✅")
-                        await update_user_stats(res_id, guessr_difficulty)
-
-                        break
-                    else:
-                        await res.add_reaction("❌")
-
-                    if data["answer_count"] >= data["answer_count_max"]:
-                        # After 5 respondent.
+                    except asyncio.TimeoutError:
+                        # When the timeout timer is finished.
                         await ctx.channel.send(
                             embed=make_embed(
-                                title="Game Finished!",
-                                description=f"5 users have attempted at guessing this chamber, but no one got it right!\nThe chamber is {answer}!",
-                                color=BOT_COLOR,
+                                title="Time's Up!",
+                                description=f"The chamber is {answer}!",
+                                color="#ededed",
                             )
                         )
                         game_log["timeout"] += 1
 
                         break
-                except asyncio.TimeoutError:
-                    # When the timeout timer is finished.
-                    await ctx.channel.send(
-                        embed=make_embed(
-                            title="Time's Up!",
-                            description=f"The chamber is {answer}!",
-                            color="#ededed",
-                        )
-                    )
-                    game_log["timeout"] += 1
 
+                    elapsed_time = time.time() - start_time
+
+                if game_stopped == True:
                     break
 
-                elapsed_time = time.time() - start_time
+            total_chambers = len(chambers)
+            solved_count = game_log["solved"]
+            unsolved_count = game_log["timeout"]
+            skipped_count = game_log["skipped"]
+            game_id = None
+            user_mvp = find_mvp(game_log["user_ids_correct"]) or ""
 
-            if game_stopped == True:
-                break
-
-        total_chambers = len(chambers)
-        solved_count = game_log["solved"]
-        unsolved_count = game_log["timeout"]
-        skipped_count = game_log["skipped"]
-        game_id = None
-        user_mvp = find_mvp(game_log["user_ids_correct"]) or ""
-
-        try:
-            # Saving game result to the database.
-            game_id = await add_history(
-                total_chambers,
-                solved_count,
-                unsolved_count,
-                skipped_count,
-                user_mvp,
-                game_log["user_ids_participated"],
-                chambers_log,
-                str(prompter_id),
-                difficulty,
-            )
-        except Exception as e:
-            print(e)
-            user_xnonxte = await self.bot.fetch_user(XNONXTE_USER_ID)
-
-            await ctx.send(
-                embed=make_embed(
-                    "Error Occurred!",
-                    f"Failed while uploading game result to the server, please contact {user_xnonxte.mention}!",
-                    BOT_COLOR,
+            try:
+                # Saving game result to the database.
+                game_id = await add_history(
+                    total_chambers,
+                    solved_count,
+                    unsolved_count,
+                    skipped_count,
+                    user_mvp,
+                    game_log["user_ids_participated"],
+                    chambers_log,
+                    str(prompter_id),
+                    difficulty,
                 )
+            except Exception as e:
+                print(e)
+                user_xnonxte = await self.bot.fetch_user(XNONXTE_USER_ID)
+
+                await ctx.send(
+                    embed=make_embed(
+                        "Error Occurred!",
+                        f"Failed while uploading game result to the server, please contact {user_xnonxte.mention}!",
+                        BOT_COLOR,
+                    )
+                )
+
+            try:
+                user_mvp_name = (await self.bot.fetch_user(user_mvp)).mention
+            except discord.NotFound:
+                pass
+
+            users_participated = []
+            for user_id in game_log["user_ids_participated"]:
+                users_participated.append((await self.bot.fetch_user(int(user_id))).mention)
+
+            user_mvp_text = (
+                f"{user_mvp_name} for the most solves!"
+                if game_log["user_ids_correct"]
+                else "No one :("
+            )
+            users_participated_text = (
+                ", ".join(users_participated)
+                if len(game_log["user_ids_participated"]) != 0
+                else "No one participated :("
+            )
+            footer_text = (
+                f"Game ID: {game_id}" if game_id != None else "This game is not recorded!"
             )
 
-        try:
-            user_mvp_name = (await self.bot.fetch_user(user_mvp)).mention
-        except discord.NotFound:
-            pass
+            embed_stats = make_embed(
+                "Game Result",
+                f"Solved guessr(s): ***{solved_count}***\nUnsolved guessr(s): ***{unsolved_count}***\nSkipped guessr(s): ***{skipped_count}***\nParticipated user(s): {users_participated_text}\n\nMVP: {user_mvp_text}",
+                BOT_COLOR,
+            )
+            embed_stats.set_footer(
+                text=footer_text,
+                icon_url="attachment://icon.png",
+            )
 
-        users_participated = []
-        for user_id in game_log["user_ids_participated"]:
-            users_participated.append((await self.bot.fetch_user(int(user_id))).mention)
+            await ctx.channel.send(embed=embed_stats, file=bot_make_icon())            
+        except Exception as e:
+            self.channels_running.remove(channel_id)
+            
+            raise commands.CommandError(e)
+        else:
+            self.channels_running.remove(channel_id)
 
-        user_mvp_text = (
-            f"{user_mvp_name} for the most solves!"
-            if game_log["user_ids_correct"]
-            else "No one :("
-        )
-        users_participated_text = (
-            ", ".join(users_participated)
-            if len(game_log["user_ids_participated"]) != 0
-            else "No one participated :("
-        )
-        footer_text = (
-            f"Game ID: {game_id}" if game_id != None else "This game is not recorded!"
-        )
-
-        embed_stats = make_embed(
-            "Game Result",
-            f"Solved guessr(s): ***{solved_count}***\nUnsolved guessr(s): ***{unsolved_count}***\nSkipped guessr(s): ***{skipped_count}***\nParticipated user(s): {users_participated_text}\n\nMVP: {user_mvp_text}",
-            BOT_COLOR,
-        )
-        embed_stats.set_footer(
-            text=footer_text,
-            icon_url="attachment://icon.png",
-        )
-
-        await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
-
-        self.channels_running.remove(channel_id)
 
 
 async def setup(bot):

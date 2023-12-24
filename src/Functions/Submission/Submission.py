@@ -1,4 +1,5 @@
 from typing import Literal, Optional
+from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -96,13 +97,13 @@ class Submission(commands.Cog):
     )
     @app_commands.describe(
         submission_id="Shows the detail for a specific submission with its ID.",
-        status="Searches submissions by their status.",
+        status="Searches submissions by their status (defaults to 'Pending').",
     )
     async def submissions(
         self,
         ctx,
         submission_id: Optional[str] = "",
-        status: Optional[Literal["Pending", "Accepted", "Rejected"]] = "",
+        status: Optional[Literal["Pending", "Accepted", "Rejected", "All"]] = "Pending",
     ):
         await ctx.defer()
 
@@ -111,35 +112,30 @@ class Submission(commands.Cog):
 
             if not submission:
                 await ctx.send(
-                    f"Submission ID: `{submission_id}` does not exist in the database!",
+                    f"Submission with ID `{submission_id}` does not exist in the database!",
                     ephemeral=True,
                 )
                 return
-
-            submitter_mention = (
-                await self.bot.fetch_user(int(submission["submitter"]))
-            ).mention
-
+            
+            submitter = await self.bot.fetch_user(int(submission["submitter"]))
+            formatted_time = datetime.fromtimestamp(submission["createdStamp"]).strftime("%B %d, %Y %I:%M %p")
+            
             embed = make_embed(
-                None,
-                f"`{submission_id}` submission details",
-                get_color_by_status(submission["status"]),
+                description=f"Submitted by {submitter.mention}",
+                color=get_color_by_status(submission["status"]),
             )
             embed.add_field(name="Status", value=submission["status"].capitalize())
             embed.add_field(name="Difficulty", value=submission["difficulty"])
-            embed.add_field(name="Submitted by", value=submitter_mention)
-            embed.add_field(
-                name="Submitted at", value=f"<t:{submission['createdStamp']}:f>"
-            )
             embed.set_image(url=submission["url"])
+            embed.set_author(name=submitter.name, icon_url=submitter.avatar.url)
             embed.set_footer(
-                text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
+                text=f"ID: {submission_id} | Created at • {formatted_time}", icon_url="attachment://icon.png"
             )
 
             await ctx.send(embed=embed, file=bot_make_icon())
 
             return
-        elif status:
+        elif status in ["Pending", "Accepted", "Rejected"]:
             submissions = await read_submission_by_status(status.lower())
             submissions_entry = []
 
@@ -148,11 +144,11 @@ class Submission(commands.Cog):
                     await self.bot.fetch_user(int(submission["submitter"]))
                 ).mention
                 submissions_entry.append(
-                    f"{index}. `{submission['submissionId']}` - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | Submitted by {submitter_mention} at <t:{submission['createdStamp']}:f>"
+                    f"{index}. Submitted by {submitter_mention}, created at • <t:{submission['createdStamp']}:F>\n**{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | ID: `{submission['submissionId']}`"
                 )
 
             embed = make_embed(
-                "Submissions", "\n".join(submissions_entry) or "Empty :(", BOT_COLOR
+                f"Submissions with {status.lower()} status", "\n\n".join(submissions_entry) or "Empty :(", BOT_COLOR
             )
             embed.set_footer(
                 text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
@@ -170,11 +166,11 @@ class Submission(commands.Cog):
                 await self.bot.fetch_user(int(submission["submitter"]))
             ).mention
             submissions_entry.append(
-                f"{index}. `{submission['submissionId']}` - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | Submitted by {submitter_mention} at <t:{submission['createdStamp']}:f>"
+               f"{index}. Submitted by {submitter_mention} - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty\ncreated at • <t:{submission['createdStamp']}:F> | ID: `{submission['submissionId']}`"
             )
 
         embed = make_embed(
-            "Submissions Status", "\n".join(submissions_entry) or "Empty :(", BOT_COLOR
+            "Submissions", "\n\n".join(submissions_entry) or "Empty :(", BOT_COLOR
         )
         embed.set_footer(
             text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"

@@ -121,7 +121,7 @@ class Leaderboard(commands.Cog):
             easy, medium, hard, veryhard = user_stats["scores"].values()
             elo = sum([easy * 3, medium * 5, hard * 10, veryhard * 15])
 
-            users_stat_entry.append(f"{rank}. {user_mention} - with **{elo}** ELO")
+            users_stat_entry.append(f"{rank}. {user_mention} at **{elo}** ELO")
 
         lb_embed = make_embed(
             "Leaderboard", "\n".join(users_stat_entry) or "Empty :(", BOT_COLOR

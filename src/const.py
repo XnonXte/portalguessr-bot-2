@@ -1,6 +1,6 @@
 # Bot's constants.
 BOT_COLOR = "#cb3030"
-BOT_VERSION = "v0.0.1"
+BOT_VERSION = "v0.0.2"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
 
