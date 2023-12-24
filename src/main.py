@@ -100,6 +100,14 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
                 "#FF0000",
             ),
         )
+    elif isinstance(error, discord.errors.HTTPException):
+        await ctx.send(
+            embed=make_embed(
+                "HTTP exception occurred!",
+                f"```{error}```",
+                "#FF0000",
+            ),
+        )
     else:
         await ctx.send(embed=make_embed("Uncaught Error!", f"```{error}```", "#FF0000"))
 

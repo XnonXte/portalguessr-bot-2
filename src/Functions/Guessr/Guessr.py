@@ -1,5 +1,3 @@
-# TODO: Refactor the code cuz it's garbo af.
-
 import asyncio
 import time
 from typing import Literal, Optional
@@ -66,9 +64,9 @@ class Guessr(commands.Cog):
             )
 
             return
-        elif rounds > 50:
+        elif rounds > 25:
             await ctx.send(
-                "You're exceeding the rounds limit! I'm not sure if you can finish that many...",
+                "You're exceeding the limit! I'm not sure if you can finish that many...",
                 ephemeral=True,
             )
 
