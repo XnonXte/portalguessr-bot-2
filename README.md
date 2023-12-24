@@ -6,7 +6,7 @@ This is a major rewrite of the original [PortalGuessr bot](https://github.com/Xn
 
 - Download the latest release if available.
 - Run `install.bat` to install the required dependencies with Pipenv.
-- Create a `config.env` file containing `TOKEN` and `IMGBB_API_KEY` variables (get your own imgbb's API key at: https://imgbb.com/).
+- Create a `config.env` file containing `TOKEN`, `API_KEY`, and `IMGBB_API_KEY` variables (get your own imgbb's API key at: https://imgbb.com/).
 - Fill in your own `OWNER_USER_ID` and `TESTING_SERVER_ID` in `./src/const.py` (must be a valid Discord IDs).
 - Run the environment with `pipenv run python ./src/main.py`.
 - Enjoy! Let me know of what you think of it!
@@ -19,6 +19,8 @@ This is a major rewrite of the original [PortalGuessr bot](https://github.com/Xn
   - A: There aren't really a criteria just a constraint that needs to be followed in order to get accepted, the constraint is available on pinned messages at `#submissions` channel in the PortalGuessr's testing server.
 - Q: Can I contribute to PortalGuessr?
   - A: Yes! Any contribution is welcome, although I would appreciate you if you join the testing server on Discord first.
+- Q: What is `API_KEY`?
+  - A: It's an auth key that needs to be equal to the same key you use in your own [PortalGuessr's backend server.](https://github.com/PortalGuessr/PortalGuessr-Backend)
 
 ## Discord Server
 

@@ -22,8 +22,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-# TODO: Add a secret password when requesting dangerous route to the server.
-
 import os
 from typing import Literal, Optional
 
