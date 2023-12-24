@@ -96,9 +96,9 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         await ctx.send(
             embed=make_embed(
                 "This command must be invoked in the testing server!",
-                f"```{error}```",
+                f"Join our testing server: https://discord.gg/3fZaCKMNPw",
                 "#FF0000",
-            ).add_field(name="Join our server", value="https://discord.gg/3fZaCKMNPw"),
+            ),
         )
     else:
         await ctx.send(embed=make_embed("Uncaught Error!", f"```{error}```", "#FF0000"))
