@@ -24,7 +24,7 @@ This is a major rewrite of the original [PortalGuessr bot](https://github.com/Xn
 
 ## Discord Server
 
-Join the testing server on Discord to get the latest news about PortalGuessr: https://discord.gg/3fZaCKMNPw
+Join the testing server on Discord to get the latest news about PortalGuessr: https://discord.gg/dDbgtFb2KC
 
 ## Invite
 
