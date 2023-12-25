@@ -64,3 +64,4 @@ OWNER_USER_ID = 706330866267193344  # Fill in with your own user ID on Discord.
 TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
+DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"

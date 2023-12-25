@@ -30,7 +30,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from hooks.discord.use_discord import make_embed
-from const import BOT_PREFIX, BOT_STATUS
+from const import BOT_PREFIX, BOT_STATUS, DISCORD_INVITE
 
 load_dotenv("./config.env")
 
@@ -96,7 +96,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         await ctx.send(
             embed=make_embed(
                 "This command must be invoked in the testing server!",
-                f"Join our testing server: https://discord.gg/3fZaCKMNPw",
+                f"Join our testing server: {DISCORD_INVITE}",
                 "#FF0000",
             ),
         )
