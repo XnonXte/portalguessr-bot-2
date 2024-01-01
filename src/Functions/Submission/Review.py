@@ -94,7 +94,7 @@ class Review(commands.Cog):
 
                     embed = make_embed(
                         "Submission Accepted!",
-                        f"Submission with ID `{result['submissionId']}` has been accepted! Chamber ID: {result['fileId']}",
+                        f"Submission with ID `{submission['submissionId']}` has been accepted! Chamber ID: {result['fileId']}",
                         BOT_COLOR,
                     )
                     embed.set_footer(
@@ -120,7 +120,7 @@ class Review(commands.Cog):
 
                     embed = make_embed(
                         "Submission Rejected!",
-                        f"Submission with ID `{result['submissionId']}` has been rejected!",
+                        f"Submission with ID `{submission['submissionId']}` has been rejected!",
                         BOT_COLOR,
                     )
                     embed.add_field(name="Reason", value=reason.content)

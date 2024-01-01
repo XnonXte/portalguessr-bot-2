@@ -119,7 +119,7 @@ class MyCog(commands.Cog):
             else:
                 embed = make_embed(
                     "Submission Rejected!",
-                    f"Submission with ID `{result['submissionId']}` has been rejected!",
+                    f"Submission with ID `{submission_id}` has been rejected!",
                     BOT_COLOR,
                 )
                 embed.add_field(name="Reason", value=reason)
@@ -147,7 +147,7 @@ class MyCog(commands.Cog):
 
             embed = make_embed(
                 "Submission Accepted!",
-                f"Submission with ID `{result['submissionId']}` has been accepted! Chamber ID: {result['fileId']}",
+                f"Submission with ID `{submission_id}` has been accepted! Chamber ID: {result['fileId']}",
                 BOT_COLOR,
             )
             embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
