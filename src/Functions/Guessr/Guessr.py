@@ -19,7 +19,7 @@ from utils.guessr.utils import (
 from hooks.discord.use_discord import make_embed, get_user_mention
 from utils.bot.utils import bot_make_icon
 from utils.guessr.history import add_history
-from const import BOT_COLOR, CHAMBERS
+from const import BOT_COLOR, BOT_COLOR_WHITE, CHAMBERS
 
 
 class Guessr(commands.Cog):
@@ -243,7 +243,7 @@ class Guessr(commands.Cog):
                             embed=make_embed(
                                 title="Time's Up!",
                                 description=f"The chamber is {answer}!",
-                                color="#ededed",
+                                color=BOT_COLOR_WHITE,
                             )
                         )
                         game_log["timeout"] += 1
@@ -312,6 +312,10 @@ class Guessr(commands.Cog):
             await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
         except Exception as e:
             self.channels_running.remove(ctx.channel.id)
+
+            await ctx.send(
+                embed=make_embed("Error detected! Game is stopped!", color=BOT_COLOR)
+            )
 
             raise commands.CommandError(e)
         else:

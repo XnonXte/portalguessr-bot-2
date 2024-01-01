@@ -2,6 +2,7 @@ import discord
 
 # Bot's constants.
 BOT_COLOR = discord.Color.from_str("#cb3030")
+BOT_COLOR_WHITE = discord.Color.from_str("#ededed")
 BOT_VERSION = "v0.0.3"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
@@ -60,6 +61,11 @@ OWNER_COMMANDS = {
     "review": "Starts a review session for pending submissions.",
 }
 DEFAULT_FOOTER_TEXT = f"PortalGuessr 2 {BOT_VERSION}"
+
+# Submissions constants.
+SUBMISSION_REJECTED = discord.Color.from_str("#99aab5")
+SUBMISSION_ACCEPTED = discord.Color.from_str("#57f287")
+SUBMISSION_PENDING = discord.Color.from_str("#99aab5")
 
 # Misc constants.
 XNONXTE_USER_ID = 706330866267193344
