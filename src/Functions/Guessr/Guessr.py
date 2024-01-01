@@ -281,10 +281,10 @@ class Guessr(commands.Cog):
             users_participated = []
 
             for user_id in game_log["user_ids_participated"]:
-                users_participated.append(await get_user_mention(user_id))
+                users_participated.append(await get_user_mention(self.bot, user_id))
 
             user_mvp_text = (
-                f"{await get_user_mention(user_id)} for the most solves!"
+                f"{await get_user_mention(self.bot, user_id)} for the most solves!"
                 if game_log["user_ids_correct"]
                 else "No one :("
             )
