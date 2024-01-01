@@ -1,6 +1,10 @@
 from discord.ext import commands
 
+from const import OWNER_USER_ID
 
-async def check_is_owner(ctx_id, owner_id):
-    if ctx_id != owner_id:
-        raise commands.NotOwner(f"Author's ID ({ctx_id}) is not equal to {owner_id}")
+
+def check_is_owner(ctx_id):
+    if ctx_id != OWNER_USER_ID:
+        raise commands.NotOwner(
+            f"Author's ID ({ctx_id}) is not equal to {OWNER_USER_ID}"
+        )

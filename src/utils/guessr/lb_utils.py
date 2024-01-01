@@ -8,7 +8,7 @@ from utils.guessr.lb import (
 async def update_user_stats(user_id, difficulty):
     user_data = await get_score(user_id)
 
-    if not user_data:
+    if user_data == None:
         initial_scores = {"Easy": 0, "Medium": 0, "Hard": 0, "Very Hard": 0}
         initial_scores[difficulty] += 1
 

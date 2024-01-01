@@ -1,6 +1,8 @@
+from discord import Color
+
 # Bot's constants.
-BOT_COLOR = "#cb3030"
-BOT_VERSION = "v0.0.2"
+BOT_COLOR = Color.from_str("#cb3030")
+BOT_VERSION = "v0.0.3"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
 
@@ -30,10 +32,10 @@ CHAMBERS = [
     "e01",
     "e02",
 ]
-EASY_COLOR = "#4caf50"
-MEDIUM_COLOR = "#fedc56"
-HARD_COLOR = "#ff5733"
-VERY_HARD_COLOR = "#36cbd3"
+EASY_COLOR = Color.from_str("#4caf50")
+MEDIUM_COLOR = Color.from_str("#fedc56")
+HARD_COLOR = Color.from_str("#ff5733")
+VERY_HARD_COLOR = Color.from_str("#36cbd3")
 
 # URLs constants.
 SERVER_URL = (
@@ -55,6 +57,7 @@ OWNER_COMMANDS = {
     "reject": "Rejects a pending submission",
     "lb_add": "Adds a new stats to the leaderboard",
     "lb_remove": "Removes an existing stats from the leaderboard",
+    "review": "Starts a review session for pending submissions.",
 }
 DEFAULT_FOOTER_TEXT = f"PortalGuessr 2 {BOT_VERSION}"
 
@@ -65,3 +68,4 @@ TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
 DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
+DANGER_COLOR = Color.from_str("#FF0000")

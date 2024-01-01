@@ -1,9 +1,12 @@
+from discord import Color
+
+
 def get_color_by_status(status):
     if status == "pending":
-        return "#99aab5"
+        return Color.from_str("#99aab5")
     elif status == "accepted":
-        return "#57f287"
+        return Color.from_str("#57f287")
     elif status == "rejected":
-        return "#ed4245"
+        return Color.from_str("#ed4245")
     else:
         raise Exception("Unknown status.")

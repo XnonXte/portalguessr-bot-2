@@ -14,7 +14,7 @@ from utils.submission.submit import (
 )
 
 from utils.owner.check_server import check_is_testing_server
-from hooks.discord.use_discord import make_embed
+from hooks.discord.use_discord import make_embed, get_user, get_user_mention
 from utils.bot.utils import bot_make_icon
 from utils.submission.utils import get_color_by_status
 from const import BOT_COLOR, BOT_VERSION, TESTING_SERVER_ID
@@ -63,6 +63,8 @@ class Submission(commands.Cog):
             "e02",
         ],
     ):
+        check_is_testing_server(ctx.guild.id)
+
         allowed_image_types = ["png", "jpeg", "jpg", "webp"]
         file_extension = image.filename.split(".")[-1].lower()
 
@@ -71,7 +73,6 @@ class Submission(commands.Cog):
 
             return
 
-        await check_is_testing_server(ctx.guild.id, TESTING_SERVER_ID)
         await ctx.defer()
 
         uploaded_image_url = upload_image(image.url, image.filename)
@@ -111,42 +112,49 @@ class Submission(commands.Cog):
             submission = await read_one_submission(submission_id)
 
             if not submission:
-                await ctx.send(
-                    f"Submission with ID `{submission_id}` does not exist in the database!",
-                    ephemeral=True,
+                raise commands.BadArgument(
+                    f"{submission_id} is not a valid submission ID!"
                 )
-                return
+            else:
+                submitter = await get_user(self.bot, submission["submitter"])
+                submitter_name = submitter.name if submitter != None else "N/A"
+                submitter_avatar = (
+                    submitter.avatar.url
+                    if submitter != None
+                    else "attachment://icon.png"
+                )
+                submitter_mention = await get_user_mention(
+                    self.bot, submission["submitter"]
+                )
 
-            submitter = await self.bot.fetch_user(int(submission["submitter"]))
-            formatted_time = datetime.fromtimestamp(
-                submission["createdStamp"]
-            ).strftime("%B %d, %Y %I:%M %p")
+                formatted_time = datetime.fromtimestamp(
+                    submission["createdStamp"]
+                ).strftime("%B %d, %Y %I:%M %p")
 
-            embed = make_embed(
-                description=f"Submitted by {submitter.mention}",
-                color=get_color_by_status(submission["status"]),
-            )
-            embed.add_field(name="Status", value=submission["status"].capitalize())
-            embed.add_field(name="Difficulty", value=submission["difficulty"])
-            embed.add_field(name="Answer", value=f"||{submission['answer']}||")
-            embed.set_image(url=submission["url"])
-            embed.set_author(name=submitter.name, icon_url=submitter.avatar.url)
-            embed.set_footer(
-                text=f"ID: {submission_id} | Created at • {formatted_time}",
-                icon_url="attachment://icon.png",
-            )
+                embed = make_embed(
+                    description=f"Submitted by {submitter_mention}",
+                    color=get_color_by_status(submission["status"]),
+                )
+                embed.add_field(name="Status", value=submission["status"].capitalize())
+                embed.add_field(name="Difficulty", value=submission["difficulty"])
+                embed.add_field(name="Answer", value=f"||{submission['answer']}||")
+                embed.set_image(url=submission["url"])
+                embed.set_author(name=submitter_name, icon_url=submitter_avatar)
+                embed.set_footer(
+                    text=f"ID: {submission_id} | Created at • {formatted_time}",
+                    icon_url="attachment://icon.png",
+                )
 
-            await ctx.send(embed=embed, file=bot_make_icon())
-
-            return
+                await ctx.send(embed=embed, file=bot_make_icon())
         elif status in ["Pending", "Accepted", "Rejected"]:
             submissions = await read_submission_by_status(status.lower())
+            submissions_reversed = submissions[::-1]
             submissions_entry = []
 
-            for index, submission in enumerate(reversed(submissions), start=1):
-                submitter_mention = (
-                    await self.bot.fetch_user(int(submission["submitter"]))
-                ).mention
+            for index, submission in enumerate(submissions_reversed, start=1):
+                submitter_mention = await get_user_mention(
+                    self.bot, submission["submitter"]
+                )
                 submissions_entry.append(
                     f"{index}. Submitted by {submitter_mention}, created at • <t:{submission['createdStamp']}:F>\n**{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | ID: `{submission['submissionId']}`"
                 )
@@ -161,28 +169,27 @@ class Submission(commands.Cog):
             )
 
             await ctx.send(embed=embed, file=bot_make_icon())
+        else:
+            submissions = await read_submission()
+            submissions_reversed = submissions[::-1]
+            submissions_entry = []
 
-            return
+            for index, submission in enumerate(submissions_reversed, start=1):
+                submitter_mention = await get_user_mention(
+                    self.bot, submission["submitter"]
+                )
+                submissions_entry.append(
+                    f"{index}. Submitted by {submitter_mention} - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty\ncreated at • <t:{submission['createdStamp']}:F> | ID: `{submission['submissionId']}`"
+                )
 
-        submissions = await read_submission()
-        submissions_entry = []
-
-        for index, submission in enumerate(reversed(submissions), start=1):
-            submitter_mention = (
-                await self.bot.fetch_user(int(submission["submitter"]))
-            ).mention
-            submissions_entry.append(
-                f"{index}. Submitted by {submitter_mention} - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty\ncreated at • <t:{submission['createdStamp']}:F> | ID: `{submission['submissionId']}`"
+            embed = make_embed(
+                "Submissions", "\n\n".join(submissions_entry) or "Empty :(", BOT_COLOR
+            )
+            embed.set_footer(
+                text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
             )
 
-        embed = make_embed(
-            "Submissions", "\n\n".join(submissions_entry) or "Empty :(", BOT_COLOR
-        )
-        embed.set_footer(
-            text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
-        )
-
-        await ctx.send(embed=embed, file=bot_make_icon())
+            await ctx.send(embed=embed, file=bot_make_icon())
 
 
 async def setup(bot):

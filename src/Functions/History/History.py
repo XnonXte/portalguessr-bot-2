@@ -5,10 +5,10 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed
+from hooks.discord.use_discord import make_embed, get_user_mention, get_user
 from utils.guessr.history import read_history, read_one_history
-from const import BOT_COLOR
 from utils.bot.utils import bot_make_icon
+from const import BOT_COLOR
 
 
 class History(commands.Cog):
@@ -26,57 +26,61 @@ class History(commands.Cog):
 
         if history_id:
             game = await read_one_history(history_id)
-            formatted_time = datetime.fromtimestamp(game["createdStamp"]).strftime("%B %d, %Y %I:%M %p")
 
-            if not game:
-                await ctx.send(
-                    f"Game with ID `{history_id}` does not exist in the leaderboard!",
-                    ephemeral=True,
+            if game == None:
+                raise commands.BadArgument(f"{history_id} is not a valid history ID!")
+            else:
+                formatted_time = datetime.fromtimestamp(game["createdStamp"]).strftime(
+                    "%B %d, %Y %I:%M %p"
                 )
-                
-                return
 
-            mvp = await self.bot.fetch_user(int(game["mvp"]))
-            prompter = await self.bot.fetch_user(int(game["prompterUserId"])
-)
+                mvp = await get_user_mention(self.bot, game["mvp"])
+                prompter = await get_user(self.bot, game["prompterUserId"])
+                prompter_name = prompter.name if prompter != None else "N/A"
+                prompter_avatar = (
+                    prompter.avatar.url if prompter != None else "attachment://icon.png"
+                )
+
+                embed = make_embed(
+                    description=f"Game prompted by: {prompter.mention}",
+                    color=BOT_COLOR,
+                )
+                embed.add_field(name="Solved", value=game["solved"])
+                embed.add_field(name="Timed out", value=game["timeout"])
+                embed.add_field(name="Skipped", value=game["skipped"])
+                embed.add_field(name="Difficulty", value=game["difficulty"])
+                embed.add_field(name="MVP", value=mvp)
+                embed.add_field(name="Participated", value=len(game["participators"]))
+                embed.set_author(name=prompter_name, icon_url=prompter_avatar)
+                embed.set_footer(
+                    text=f"ID: {game['historyId']} | Finished at • {formatted_time}",
+                    icon_url="attachment://icon.png",
+                )
+
+                await ctx.send(embed=embed, file=bot_make_icon())
+        else:
+            history = await read_history()
+            history_reversed = history[::-1]
+            history_limited = history_reversed[:10]
+            history_entry = []
+
+            for index, game in enumerate(history_limited, start=1):
+                history_entry.append(
+                    f"{index}. **{game['solved']}** solved, **{game['timeout']}** timed out, **{game['skipped']}** skipped, **{game['total']}** total, **{game['difficulty']}** difficulty\nfinished at • <t:{game['createdStamp']}:F> | ID: `{game['historyId']}`"
+                )
+
             embed = make_embed(
-                description=f"Game prompted by: {prompter.mention}",
-                color=BOT_COLOR,
+                "Game History",
+                "\n\n".join(history_entry) + "\n\nShowing the last 10 recorded games."
+                or "Empty :(",
+                BOT_COLOR,
             )
-            
-            embed.add_field(name="Solved", value=game["solved"])
-            embed.add_field(name="Timed out", value=game["timeout"])
-            embed.add_field(name="Skipped", value=game["skipped"])
-            embed.add_field(name="Difficulty", value=game["difficulty"])
-            embed.add_field(name="MVP", value=mvp.mention if mvp else "None")
-            embed.add_field(name="Participated", value=len(game["participators"]))
-            embed.set_author(name=prompter.name, icon_url=prompter.avatar.url)
-            embed.set_footer(text=f"ID: {game['historyId']} | Finished at • {formatted_time}", icon_url="attachment://icon.png")
+            embed.set_footer(
+                text=f"PortalGuessr has been played {len(history)} times!",
+                icon_url="attachment://icon.png",
+            )
 
             await ctx.send(embed=embed, file=bot_make_icon())
-
-            return
-
-        history = await read_history()
-        history_reversed = history[::-1] # List slicing go brrrr.
-        history_limited_to_10 = history_reversed[:10]
-        history_entry = []
-        
-
-        for index, game in enumerate(history_limited_to_10, start=1):
-            history_entry.append(
-                f"{index}. **{game['solved']}** solved, **{game['timeout']}** timed out, **{game['skipped']}** skipped, **{game['total']}** total, **{game['difficulty']}** difficulty\nfinished at • <t:{game['createdStamp']}:F> | ID: `{game['historyId']}`"
-            )
-
-        embed = make_embed(
-            "Game History", "\n\n".join(history_entry) + "\n\nShowing the last 10 recorded games." or "Empty :(", BOT_COLOR
-        )
-        embed.set_footer(
-            text=f"PortalGuessr has been played {len(history)} times!",
-            icon_url="attachment://icon.png",
-        )
-
-        await ctx.send(embed=embed, file=bot_make_icon())
 
 
 async def setup(bot):

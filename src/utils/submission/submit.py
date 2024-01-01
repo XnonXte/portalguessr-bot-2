@@ -45,7 +45,7 @@ async def update_submission(submission_id, status):
 async def accept_submission(submission_id):
     response = await update_submission(submission_id, "accepted")
 
-    if not response:
+    if response == None:
         raise Exception(f"Not found submission ID: {submission_id}!")
 
     if response["status"] == "accepted":

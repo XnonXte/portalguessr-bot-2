@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2023 XnonXte
+Copyright (c) 2023-Present XnonXte
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from hooks.discord.use_discord import make_embed
-from const import BOT_PREFIX, BOT_STATUS, DISCORD_INVITE
+from const import BOT_PREFIX, BOT_STATUS, DISCORD_INVITE, DANGER_COLOR
 
 load_dotenv("./config.env")
 
@@ -76,20 +76,18 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         await ctx.send(f"Unknown command: `{ctx.message.content[len(BOT_PREFIX):]}`")
     elif isinstance(error, commands.NotOwner):
         await ctx.send(
-            embed=make_embed(
-                "You're not the owner of this bot!", f"```{error}```", "#FF0000"
-            )
+            embed=make_embed("Forbidden command!", f"```{error}```", DANGER_COLOR)
         )
     elif isinstance(error, commands.MissingRequiredAttachment):
         await ctx.send(
             embed=make_embed(
-                "Missing required attachment!", f"```{error}```", "#FF0000"
+                "Missing required attachment!", f"```{error}```", DANGER_COLOR
             )
         )
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(
             embed=make_embed(
-                "Missing required argument(s)!", f"```{error}```", "#FF0000"
+                "Missing required argument(s)!", f"```{error}```", DANGER_COLOR
             )
         )
     elif isinstance(error, commands.GuildNotFound):
@@ -97,19 +95,21 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
             embed=make_embed(
                 "This command must be invoked in the testing server!",
                 f"Join our testing server: {DISCORD_INVITE}",
-                "#FF0000",
+                DANGER_COLOR,
             ),
         )
-    elif isinstance(error, commands.CommandError):
+    elif isinstance(error, commands.UserNotFound):
         await ctx.send(
-            embed=make_embed(
-                "Command error!",
-                f"```{error}```",
-                "#FF0000",
-            ),
+            embed=make_embed("User not found!", f"```{error}```", DANGER_COLOR)
+        )
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send(
+            embed=make_embed("Bad argument!", f"```{error}```", DANGER_COLOR)
         )
     else:
-        await ctx.send(embed=make_embed("Uncaught Error!", f"```{error}```", "#FF0000"))
+        await ctx.send(
+            embed=make_embed("Uncaught error!", f"```{error}```", DANGER_COLOR)
+        )
 
         raise error
 

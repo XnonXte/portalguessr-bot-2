@@ -1,13 +1,13 @@
 from discord.ext import commands
 
 from hooks.discord.use_discord import make_embed
+from utils.bot.utils import bot_make_icon
 from const import (
     GENERAL_COMMANDS,
     OWNER_COMMANDS,
     BOT_COLOR,
     DEFAULT_FOOTER_TEXT,
 )
-from utils.bot.utils import bot_make_icon
 
 
 class Help(commands.Cog):

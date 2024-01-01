@@ -4,16 +4,15 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed
+from hooks.discord.use_discord import make_embed, get_user_mention
 from utils.guessr.lb import add_score, remove_score
 from utils.owner.check_id import check_is_owner
 from utils.submission.submit import update_submission, accept_submission
+from utils.bot.utils import bot_make_icon
 from const import (
-    OWNER_USER_ID,
     BOT_COLOR,
     DEFAULT_FOOTER_TEXT,
 )
-from utils.bot.utils import bot_make_icon
 
 
 class MyCog(commands.Cog):
@@ -40,7 +39,7 @@ class MyCog(commands.Cog):
         hard_count: int,
         very_hard_count: int,
     ):
-        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        check_is_owner(ctx.author.id)
         await ctx.defer()
 
         data = {
@@ -54,8 +53,8 @@ class MyCog(commands.Cog):
 
         try:
             result = await add_score(user_id, data)
+            user_mention = await get_user_mention(self.bot, user_id)
 
-            user_mention = (await self.bot.fetch_user(int(user_id))).mention
             embed = make_embed(
                 "Success!", f"Stats for {user_mention} has been created!", BOT_COLOR
             )
@@ -65,13 +64,7 @@ class MyCog(commands.Cog):
 
             await ctx.send(embed=embed, file=bot_make_icon())
         except Exception as e:
-            await ctx.send(
-                embed=make_embed(
-                    "Failed while adding user stats to the leaderboard",
-                    f"```{e}```",
-                    "#ff0000",
-                )
-            )
+            raise commands.CommandError(e)
 
     @commands.hybrid_command(
         name="lb_rm",
@@ -79,36 +72,29 @@ class MyCog(commands.Cog):
     )
     @app_commands.describe(user_id="The target's user ID on Discord.")
     async def lb_rm(self, ctx, user_id: str):
-        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        check_is_owner(ctx.author.id)
         await ctx.defer()
 
         try:
             result = await remove_score(int(user_id))
+
             if result["deletedCount"] == 0:
-                await ctx.send(
-                    f"Not found stats with user ID: {user_id}!", ephemeral=True
+                raise commands.UserNotFound(user_id)
+            else:
+                user_mention = await get_user_mention(self.bot, user_id)
+
+                embed = make_embed(
+                    "Success!",
+                    f"{user_mention} stats in the leaderboard has been removed!!",
+                    BOT_COLOR,
+                )
+                embed.set_footer(
+                    text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png"
                 )
 
-                return
-
-            user_mention = (await self.bot.fetch_user(int(user_id))).mention
-
-            embed = make_embed(
-                "Success!",
-                f"{user_mention} stats in the leaderboard has been removed!!",
-                BOT_COLOR,
-            )
-            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
-
-            await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=bot_make_icon())
         except Exception as e:
-            await ctx.send(
-                embed=make_embed(
-                    "Failed while removing user stats from the leaderboard",
-                    f"```{e}```",
-                    "#ff0000",
-                )
-            )
+            raise commands.CommandError(e)
 
     @commands.hybrid_command(
         name="reject", description="Rejects a pending submission (owner only command)."
@@ -120,71 +106,58 @@ class MyCog(commands.Cog):
     async def reject(
         self, ctx, submission_id: str, reason: Optional[str] = "No reason specified."
     ):
-        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        check_is_owner(ctx.author.id)
         await ctx.defer()
 
         try:
             result = await update_submission(submission_id, "rejected")
 
-            if not result:
+            if result == None:
+                raise commands.BadArgument(
+                    f"{submission_id} is not a valid submission ID!"
+                )
+            else:
+                embed = make_embed(
+                    "Submission Rejected!",
+                    f"Submission with ID `{result['submissionId']}` has been rejected!",
+                    BOT_COLOR,
+                )
+                embed.add_field(name="Reason", value=reason)
+                embed.set_footer(
+                    text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png"
+                )
+
                 await ctx.send(
-                    f"Not found submission with ID `{submission_id}`!",
-                    ephemeral=True,
+                    embed=embed,
+                    file=bot_make_icon(),
                 )
-
-                return
-
-            submitter = result["submitter"]
-            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
-
-            embed = make_embed("Submission Rejected!", f"Submission with ID `{submission_id}` has been rejected!", BOT_COLOR)
-            embed.add_field(name="Reason", value=reason)
-            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
-
-            await ctx.send(
-                f"{submitter_mention} your submission has been rejected! Better luck next time!",
-                embed=embed,
-                file=bot_make_icon(),
-            )
         except Exception as e:
-            await ctx.send(
-                embed=make_embed(
-                    "Failed while rejecting a submission!",
-                    f"```{e}```",
-                    "#ff0000",
-                )
-            )
+            raise commands.CommandError(e)
 
     @commands.hybrid_command(
         name="accept", description="Accepts a pending submission (owner only command)."
     )
     @app_commands.describe(submission_id="Target a submission to accept with its ID.")
     async def accept(self, ctx, submission_id: str):
-        await check_is_owner(ctx.author.id, OWNER_USER_ID)
+        check_is_owner(ctx.author.id)
         await ctx.defer()
 
         try:
             result = await accept_submission(submission_id)
 
-            submitter, file_id = result["submitter"], result["fileId"]
-            submitter_mention = (await self.bot.fetch_user(int(submitter))).mention
-
-            embed = make_embed("Submission Accepted!", f"Submission with ID `{submission_id}` has been accepted! Chamber ID: {file_id}", BOT_COLOR)
+            embed = make_embed(
+                "Submission Accepted!",
+                f"Submission with ID `{result['submissionId']}` has been accepted! Chamber ID: {result['fileId']}",
+                BOT_COLOR,
+            )
             embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
             await ctx.send(
-                f"{submitter_mention} your submission has been accepted! Thank you for your contribution!",
                 embed=embed,
                 file=bot_make_icon(),
             )
         except Exception as e:
-            await ctx.send(
-                embed=make_embed(
-                    "Failed while accepting a submission!",
-                    f"```{e}```",
-                    "#ff0000",
-                )
-            )
+            raise commands.CommandError(e)
 
 
 async def setup(bot):
