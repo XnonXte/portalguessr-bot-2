@@ -7,7 +7,6 @@ name = "pypi"
 discord = "==2.3.1"
 python-dotenv = "==1.0.0"
 flask = "*"
-requests = "*"
 
 [dev-packages]
 
