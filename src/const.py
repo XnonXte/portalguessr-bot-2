@@ -37,6 +37,7 @@ EASY_COLOR = discord.Color.from_str("#4caf50")
 MEDIUM_COLOR = discord.Color.from_str("#fedc56")
 HARD_COLOR = discord.Color.from_str("#ff5733")
 VERY_HARD_COLOR = discord.Color.from_str("#36cbd3")
+DANGER_COLOR = discord.Color.from_str("#FF0000")
 
 # URLs constants.
 SERVER_URL = (
@@ -74,4 +75,3 @@ TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
 DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
-DANGER_COLOR = discord.Color.from_str("#FF0000")
