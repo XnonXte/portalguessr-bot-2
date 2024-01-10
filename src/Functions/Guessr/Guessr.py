@@ -19,7 +19,13 @@ from utils.guessr.utils import (
 from hooks.discord.use_discord import make_embed, get_user_mention
 from utils.bot.utils import bot_make_icon
 from utils.guessr.history import add_history
-from const import BOT_COLOR, BOT_COLOR_WHITE, CHAMBERS
+from const import (
+    BOT_COLOR,
+    BOT_COLOR_WHITE,
+    CHAMBERS,
+    P1SR_GUILD_ID,
+    P1SR_SPAM_CHANNEL_ID,
+)
 
 
 class Guessr(commands.Cog):
@@ -50,9 +56,18 @@ class Guessr(commands.Cog):
 
             if ctx.channel.id in self.channels_running:
                 await ctx.send(
-                    f"Only one instance of a game can be running at the same channel at the same time!",
+                    "Only one game can be running at the same channel at the same time!",
                     ephemeral=True,
                 )
+
+                return
+
+            if ctx.guild.id == P1SR_GUILD_ID:
+                if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
+                    await ctx.send(
+                        f"This command can only be prompted in {ctx.guild.get_channel(P1SR_SPAM_CHANNEL_ID).mention} while in P1SR!",
+                        ephemeral=True,
+                    )
 
                 return
 
@@ -63,9 +78,9 @@ class Guessr(commands.Cog):
                 )
 
                 return
-            elif rounds > 25:
+            elif rounds > 20:
                 await ctx.send(
-                    "You're exceeding the limit! I'm not sure if you can finish that many...",
+                    "You're exceeding the rounds limit!",
                     ephemeral=True,
                 )
 
@@ -94,7 +109,7 @@ class Guessr(commands.Cog):
             chambers_log = [chamber["fileId"] for chamber in chambers]
             game_stopped = False
 
-            for round, chamber in enumerate(chambers, start=1):
+            for round_count, chamber in enumerate(chambers, start=1):
                 image_url = chamber["url"]
                 answer = chamber["answer"]
                 guessr_difficulty = chamber["difficulty"]
@@ -116,14 +131,14 @@ class Guessr(commands.Cog):
                 )
                 embed.set_image(url=image_url)
                 embed.set_footer(
-                    text=f"Round {round} of {rounds} - skip | stop",
+                    text=f"Round {round_count} of {rounds} - skip | stop",
                     icon_url="attachment://icon.png",
                 )
 
                 await ctx.send(
                     embed=embed,
                     file=bot_make_icon(),
-                ) if round == 1 else await ctx.channel.send(
+                ) if round_count == 1 else await ctx.channel.send(
                     embed=embed,
                     file=bot_make_icon(),
                 )
@@ -137,12 +152,49 @@ class Guessr(commands.Cog):
                         )
 
                         if response.content.lower() in ["skip", "stop"]:
-                            if response.author.id != ctx.author.id:
+                            if (
+                                response.author.id == ctx.author.id
+                                or response.author.guild_permissions.moderate_members
+                            ):
                                 # Responder must be the prompter.
+                                if response.content.lower() == "skip":
+                                    game_log["skipped"] += 1
+
+                                    await response.reply(
+                                        embed=make_embed(
+                                            title="Guessr Skipped!", color=BOT_COLOR
+                                        ),
+                                        mention_author=False,
+                                    )
+
+                                    break
+                                elif response.content.lower() == "stop":
+                                    if round_count == 1:
+                                        await response.reply(
+                                            embed=make_embed(
+                                                title="Finish the first round first to stop the game!",
+                                                color=BOT_COLOR,
+                                            ),
+                                            mention_author=False,
+                                        )
+
+                                        continue
+
+                                    game_stopped = True
+
+                                    await response.reply(
+                                        embed=make_embed(
+                                            title="Guessr Stopped!", color=BOT_COLOR
+                                        ),
+                                        mention_author=False,
+                                    )
+
+                                    break
+                            else:
                                 await response.reply(
                                     embed=make_embed(
                                         title="You're not allowed to use this command!",
-                                        description="Only the user prompted this guessr is eligible to use this command.",
+                                        description="Only the user prompted this guessr (or a moderator) is eligible to use this command.",
                                         color=BOT_COLOR,
                                     ),
                                     delete_after=3,
@@ -150,40 +202,6 @@ class Guessr(commands.Cog):
                                 )
 
                                 continue
-
-                            if response.content.lower() == "skip":
-                                game_log["skipped"] += 1
-
-                                await response.reply(
-                                    embed=make_embed(
-                                        title="Guessr Skipped!", color=BOT_COLOR
-                                    ),
-                                    mention_author=False,
-                                )
-
-                                break
-                            elif response.content.lower() == "stop":
-                                if round == 1:
-                                    await response.reply(
-                                        embed=make_embed(
-                                            title="Finish the first round first to stop the game!",
-                                            color=BOT_COLOR,
-                                        ),
-                                        mention_author=False,
-                                    )
-
-                                    continue
-
-                                game_stopped = True
-
-                                await response.reply(
-                                    embed=make_embed(
-                                        title="Guessr Stopped!", color=BOT_COLOR
-                                    ),
-                                    mention_author=False,
-                                )
-
-                                break
 
                         if (
                             # If the responder has responded once.
@@ -261,6 +279,7 @@ class Guessr(commands.Cog):
             skipped_count = game_log["skipped"]
             game_id = None
             user_mvp = find_mvp(game_log["user_ids_correct"]) or ""
+            user_mvp_mention = await get_user_mention(self.bot, user_mvp)
 
             try:
                 # Saving game result to the database.
@@ -278,25 +297,24 @@ class Guessr(commands.Cog):
             except Exception as e:
                 raise commands.CommandError(e)
 
-            users_participated = []
-
-            for user_id in game_log["user_ids_participated"]:
-                users_participated.append(await get_user_mention(self.bot, user_id))
-
+            users_participated = [
+                await get_user_mention(self.bot, user_id)
+                for user_id in game_log["user_ids_participated"]
+            ]
             user_mvp_text = (
-                f"{await get_user_mention(self.bot, user_id)} for the most solves!"
+                f"{user_mvp_mention} for the most solves!"
                 if game_log["user_ids_correct"]
                 else "No one :("
             )
             users_participated_text = (
                 ", ".join(users_participated)
-                if len(game_log["user_ids_participated"]) != 0
+                if game_log["user_ids_participated"]
                 else "No one participated :("
             )
             footer_text = (
                 f"Game ID: {game_id}"
                 if game_id != None
-                else "This game is not recorded!"
+                else "This game is not recorded! Please contact the developer!"
             )
 
             embed_stats = make_embed(

@@ -75,3 +75,7 @@ TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
 DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
+
+# P1SR constants.
+P1SR_GUILD_ID = 305456639530500096
+P1SR_SPAM_CHANNEL_ID = 1194331587081424996
