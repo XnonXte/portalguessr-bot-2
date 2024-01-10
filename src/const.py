@@ -38,6 +38,7 @@ MEDIUM_COLOR = discord.Color.from_str("#fedc56")
 HARD_COLOR = discord.Color.from_str("#ff5733")
 VERY_HARD_COLOR = discord.Color.from_str("#36cbd3")
 DANGER_COLOR = discord.Color.from_str("#FF0000")
+MAX_ROUNDS = 30
 
 # URLs constants.
 SERVER_URL = (

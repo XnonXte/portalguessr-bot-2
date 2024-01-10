@@ -23,6 +23,7 @@ from const import (
     BOT_COLOR,
     BOT_COLOR_WHITE,
     CHAMBERS,
+    MAX_ROUNDS,
     P1SR_GUILD_ID,
     P1SR_SPAM_CHANNEL_ID,
 )
@@ -36,7 +37,7 @@ class Guessr(commands.Cog):
     @commands.hybrid_command(name="guess", description="Starts a PortalGuessr game.")
     @app_commands.describe(
         difficulty="The desired difficulty (leave blank to keep it random).",
-        rounds="The amount of rounds in a session (max: 50).",
+        rounds=f"The amount of rounds in a session (max: {MAX_ROUNDS}).",
     )
     async def guess(
         self,
@@ -62,6 +63,8 @@ class Guessr(commands.Cog):
 
                 return
 
+            self.channels_running.append(ctx.channel.id)
+
             if ctx.guild.id == P1SR_GUILD_ID:
                 if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
                     await ctx.send(
@@ -78,7 +81,7 @@ class Guessr(commands.Cog):
                 )
 
                 return
-            elif rounds > 20:
+            elif rounds > MAX_ROUNDS:
                 await ctx.send(
                     "You're exceeding the rounds limit!",
                     ephemeral=True,
@@ -97,7 +100,6 @@ class Guessr(commands.Cog):
             except Exception as e:
                 raise commands.CommandError(e)
 
-            self.channels_running.append(ctx.channel.id)
             game_log = {
                 # Data per session.
                 "solved": 0,
@@ -105,6 +107,7 @@ class Guessr(commands.Cog):
                 "skipped": 0,
                 "user_ids_participated": [],
                 "user_ids_correct": [],
+                "ignored_continuous_guessrs_count": 0,
             }
             chambers_log = [chamber["fileId"] for chamber in chambers]
             game_stopped = False
@@ -243,7 +246,7 @@ class Guessr(commands.Cog):
                         else:
                             await response.add_reaction("❌")
 
-                        if data["answer_count"] >= data["answer_count_max"]:
+                        if data["answer_count"] == data["answer_count_max"]:
                             # After 5 respondents.
                             await ctx.channel.send(
                                 embed=make_embed(
@@ -269,6 +272,22 @@ class Guessr(commands.Cog):
                         break
 
                     elapsed_time = time.time() - start_time
+
+                if len(data["user_ids_have_answered"]) == 0:
+                    game_log["ignored_continuous_guessrs_count"] += 1
+                else:
+                    # Reset the count.
+                    game_log["ignored_continuous_guessrs_count"] = 0
+
+                if game_log["ignored_continuous_guessrs_count"] == 2:
+                    await ctx.send(
+                        embed=make_embed(
+                            "Abandoned game detected! Stopping current game...",
+                            color=BOT_COLOR,
+                        )
+                    )
+
+                    break
 
                 if game_stopped == True:
                     break
@@ -312,7 +331,7 @@ class Guessr(commands.Cog):
                 else "No one participated :("
             )
             footer_text = (
-                f"Game ID: {game_id}"
+                f"History ID: {game_id}"
                 if game_id != None
                 else "This game is not recorded! Please contact the developer!"
             )
