@@ -121,7 +121,7 @@ class Guessr(commands.Cog):
                 elapsed_time = 0
                 timeout = get_timeout(guessr_difficulty)
 
-                data = {
+                guessr_tmp_data = {
                     # Data per guessr.
                     "user_ids_have_answered": [],
                     "answer_count": 0,
@@ -161,6 +161,13 @@ class Guessr(commands.Cog):
                             ):
                                 # Responder must be the prompter.
                                 if response.content.lower() == "skip":
+                                    if guessr_tmp_data["answer_count"] == 0:
+                                        await ctx.send(
+                                            "Have one answer the current guessr first!"
+                                        )
+
+                                        continue
+
                                     game_log["skipped"] += 1
 
                                     await response.reply(
@@ -209,7 +216,7 @@ class Guessr(commands.Cog):
                         if (
                             # If the responder has responded once.
                             response.author.id
-                            in data["user_ids_have_answered"]
+                            in guessr_tmp_data["user_ids_have_answered"]
                         ):
                             await response.reply(
                                 embed=make_embed(
@@ -230,8 +237,10 @@ class Guessr(commands.Cog):
                                 str(response.author.id)
                             )
 
-                        data["user_ids_have_answered"].append(response.author.id)
-                        data["answer_count"] += 1
+                        guessr_tmp_data["user_ids_have_answered"].append(
+                            response.author.id
+                        )
+                        guessr_tmp_data["answer_count"] += 1
 
                         if response.content.lower() == answer:
                             game_log["solved"] += 1
@@ -246,7 +255,10 @@ class Guessr(commands.Cog):
                         else:
                             await response.add_reaction("❌")
 
-                        if data["answer_count"] == data["answer_count_max"]:
+                        if (
+                            guessr_tmp_data["answer_count"]
+                            == guessr_tmp_data["answer_count_max"]
+                        ):
                             # After 5 respondents.
                             await ctx.channel.send(
                                 embed=make_embed(
@@ -273,7 +285,7 @@ class Guessr(commands.Cog):
 
                     elapsed_time = time.time() - start_time
 
-                if len(data["user_ids_have_answered"]) == 0:
+                if guessr_tmp_data["answer_count"] == 0:
                     game_log["ignored_continuous_guessrs_count"] += 1
                 else:
                     # Reset the count.
