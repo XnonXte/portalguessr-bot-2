@@ -29,9 +29,10 @@ from const import (
 
 
 class Guessr(commands.Cog):
+    channels_running = set()
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.channels_running = []
 
     @commands.hybrid_command(name="guess", description="Starts a PortalGuessr game.")
     @app_commands.describe(
@@ -61,8 +62,6 @@ class Guessr(commands.Cog):
                 )
 
                 return
-
-            self.channels_running.append(ctx.channel.id)
 
             if ctx.guild.id == P1SR_GUILD_ID:
                 if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
@@ -98,6 +97,8 @@ class Guessr(commands.Cog):
                 )
             except Exception as e:
                 raise commands.CommandError(e)
+
+            self.channels_running.append(ctx.channel.id)
 
             game_log = {
                 # Data per session.
