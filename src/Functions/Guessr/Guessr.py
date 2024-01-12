@@ -63,6 +63,8 @@ class Guessr(commands.Cog):
 
                 return
 
+            self.active_game_channels.add(ctx.channel.id)
+
             if ctx.guild.id == P1SR_GUILD_ID:
                 if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
                     await ctx.send(
@@ -97,8 +99,6 @@ class Guessr(commands.Cog):
                 )
             except Exception as e:
                 raise commands.CommandError(e)
-
-            self.active_game_channels.append(ctx.channel.id)
 
             game_log = {
                 # Data per session.
@@ -360,7 +360,7 @@ class Guessr(commands.Cog):
 
             await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
         except Exception as e:
-            self.active_game_channels.remove(ctx.channel.id)
+            self.active_game_channels.discard(ctx.channel.id)
 
             await ctx.send(
                 embed=make_embed("Error detected! Game is stopped!", color=BOT_COLOR)
@@ -368,7 +368,7 @@ class Guessr(commands.Cog):
 
             raise commands.CommandError(e)
         else:
-            self.active_game_channels.remove(ctx.channel.id)
+            self.active_game_channels.discard(ctx.channel.id)
 
 
 async def setup(bot):
