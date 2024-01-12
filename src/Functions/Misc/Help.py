@@ -6,6 +6,7 @@ from const import (
     GENERAL_COMMANDS,
     OWNER_COMMANDS,
     BOT_COLOR,
+    BOT_PREFIX,
     DEFAULT_FOOTER_TEXT,
 )
 
@@ -27,7 +28,7 @@ class Help(commands.Cog):
 
         embed = make_embed(
             "PortalGuessr Help",
-            f"Some command might now work properly when invoked with the prefix command, it's recommended to use the slash command instead!",
+            "Some command might not function correctly when invoked with the prefix command, please use the slash command instead!\n\n[GitHub](https://github.com/XnonXte/PortalGuessr-Bot-2) - [Discord](https://discord.gg/dDbgtFb2KC) - [Play PortalGuessr Web](https://portalguessr.vercel.app)",
             BOT_COLOR,
         )
         embed.add_field(

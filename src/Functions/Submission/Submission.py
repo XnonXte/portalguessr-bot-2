@@ -17,7 +17,7 @@ from utils.owner.check_server import check_is_testing_server
 from hooks.discord.use_discord import make_embed, get_user, get_user_mention
 from utils.bot.utils import bot_make_icon
 from utils.submission.utils import get_color_by_status
-from const import BOT_COLOR, BOT_VERSION, TESTING_SERVER_ID
+from const import BOT_COLOR, MAX_AMOUNT, SUBMISSION_CHANNEL_ID
 
 
 class Submission(commands.Cog):
@@ -65,6 +65,11 @@ class Submission(commands.Cog):
     ):
         check_is_testing_server(ctx.guild.id)
 
+        if ctx.channel.id != SUBMISSION_CHANNEL_ID:
+            await ctx.send(
+                f"This command is only permitted to be invoked in {ctx.guild.get_channel(SUBMISSION_CHANNEL_ID).mention}"
+            )
+
         allowed_image_types = ["png", "jpeg", "jpg", "webp"]
         file_extension = image.filename.split(".")[-1].lower()
 
@@ -98,13 +103,17 @@ class Submission(commands.Cog):
     )
     @app_commands.describe(
         submission_id="Shows the detail for a specific submission with its ID.",
-        status="Searches submissions by their status (defaults to 'Pending').",
+        status="Searches submissions by their status (defaults to 'All').",
+        start="The starting index (one-based index).",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
     )
     async def submissions(
         self,
         ctx,
         submission_id: Optional[str] = "",
-        status: Optional[Literal["Pending", "Accepted", "Rejected", "All"]] = "Pending",
+        status: Optional[Literal["Pending", "Accepted", "Rejected", "All"]] = "All",
+        start: Optional[int] = 1,
+        amount: Optional[int] = 10,
     ):
         await ctx.defer()
 
@@ -146,8 +155,52 @@ class Submission(commands.Cog):
                 )
 
                 await ctx.send(embed=embed, file=bot_make_icon())
-        elif status in ["Pending", "Accepted", "Rejected"]:
-            submissions = await read_submission_by_status(status.lower())
+        else:
+            submissions = (
+                await read_submission_by_status(status.lower())
+                if status != "All"
+                else await read_submission()
+            )
+            submissions_length = len(submissions)
+
+            if amount > MAX_AMOUNT:
+                await ctx.send(
+                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    ephemeral=True,
+                )
+
+                return
+            elif amount <= 0:
+                await ctx.send(
+                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                )
+
+                return
+
+            if submissions_length != 0:
+                if start > submissions_length:
+                    await ctx.send(
+                        f"Start value cannot exceed {submissions_length}!",
+                        ephemeral=True,
+                    )
+
+                    return
+                elif start <= 0:
+                    await ctx.send(
+                        "Starting index cannot be less than or equal to 0!",
+                        ephemeral=True,
+                    )
+
+                    return
+
+            adjusted_amount = (
+                (start + amount) - 1
+                if not start + amount > submissions_length
+                else submissions_length
+            )
+            adjusted_end_index = (
+                adjusted_amount if start != submissions_length else adjusted_amount + 1
+            )
             submissions_reversed = submissions[::-1]
             submissions_entry = []
 
@@ -155,38 +208,27 @@ class Submission(commands.Cog):
                 submitter_mention = await get_user_mention(
                     self.bot, submission["submitter"]
                 )
-                submissions_entry.append(
-                    f"{index}. Submitted by {submitter_mention}, created at • <t:{submission['createdStamp']}:F>\n**{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | ID: `{submission['submissionId']}`"
-                )
+
+                entry_message = f"{index}. Submitted by {submitter_mention}, created at • <t:{submission['createdStamp']}:F>\n**{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | ID: `{submission['submissionId']}`"
+                submissions_entry.append(entry_message)
+
+            data_entry = submissions_entry[start - 1 : adjusted_end_index]
+            data_entry_length = len(data_entry)
+            embed_description = "\n\n".join(data_entry) or "Empty :("
+            embed_title = (
+                f"Submissions with {status.lower()} status"
+                if status != "All"
+                else "All Submissions"
+            )
 
             embed = make_embed(
-                f"Submissions with {status.lower()} status",
-                "\n\n".join(submissions_entry) or "Empty :(",
+                embed_title,
+                embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
-            )
-
-            await ctx.send(embed=embed, file=bot_make_icon())
-        else:
-            submissions = await read_submission()
-            submissions_reversed = submissions[::-1]
-            submissions_entry = []
-
-            for index, submission in enumerate(submissions_reversed, start=1):
-                submitter_mention = await get_user_mention(
-                    self.bot, submission["submitter"]
-                )
-                submissions_entry.append(
-                    f"{index}. Submitted by {submitter_mention} - **{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty\ncreated at • <t:{submission['createdStamp']}:F> | ID: `{submission['submissionId']}`"
-                )
-
-            embed = make_embed(
-                "Submissions", "\n\n".join(submissions_entry) or "Empty :(", BOT_COLOR
-            )
-            embed.set_footer(
-                text=f"PortalGuessr {BOT_VERSION}", icon_url="attachment://icon.png"
+                text=f"Showing {data_entry_length} out of {submissions_length} total.",
+                icon_url="attachment://icon.png",
             )
 
             await ctx.send(embed=embed, file=bot_make_icon())

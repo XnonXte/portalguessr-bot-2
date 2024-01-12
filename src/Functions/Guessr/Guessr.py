@@ -2,7 +2,6 @@ import asyncio
 import time
 from typing import Literal, Optional
 
-import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -68,7 +67,7 @@ class Guessr(commands.Cog):
             if ctx.guild.id == P1SR_GUILD_ID:
                 if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
                     await ctx.send(
-                        f"This command can only be prompted in {ctx.guild.get_channel(P1SR_SPAM_CHANNEL_ID).mention} while in P1SR!",
+                        f"This command is only permitted to be invoked in {ctx.guild.get_channel(P1SR_SPAM_CHANNEL_ID).mention} while in P1SR!",
                         ephemeral=True,
                     )
 

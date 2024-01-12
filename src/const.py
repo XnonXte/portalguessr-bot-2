@@ -3,7 +3,7 @@ import discord
 # Bot's constants.
 BOT_COLOR = discord.Color.from_str("#cb3030")
 BOT_COLOR_WHITE = discord.Color.from_str("#ededed")
-BOT_VERSION = "v0.0.3"
+BOT_VERSION = "v0.0.4"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
 
@@ -38,7 +38,7 @@ MEDIUM_COLOR = discord.Color.from_str("#fedc56")
 HARD_COLOR = discord.Color.from_str("#ff5733")
 VERY_HARD_COLOR = discord.Color.from_str("#36cbd3")
 DANGER_COLOR = discord.Color.from_str("#FF0000")
-MAX_ROUNDS = 30
+MAX_ROUNDS = 20
 
 # URLs constants.
 SERVER_URL = (
@@ -68,6 +68,7 @@ DEFAULT_FOOTER_TEXT = f"PortalGuessr 2 {BOT_VERSION}"
 SUBMISSION_REJECTED = discord.Color.from_str("#99aab5")
 SUBMISSION_ACCEPTED = discord.Color.from_str("#57f287")
 SUBMISSION_PENDING = discord.Color.from_str("#99aab5")
+SUBMISSION_CHANNEL_ID = 1165226345446510612
 
 # Misc constants.
 XNONXTE_USER_ID = 706330866267193344
@@ -76,6 +77,7 @@ TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
 DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
+MAX_AMOUNT = 20
 
 # P1SR constants.
 P1SR_GUILD_ID = 305456639530500096

@@ -117,10 +117,10 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 
 @bot.command()
 @commands.is_owner()
-async def sync(ctx: commands.Context, target: Optional[Literal["*", ".", "-"]] = "*"):
-    if target == "*":
+async def sync(ctx: commands.Context, scope: Optional[Literal["*", ".", "-"]] = "*"):
+    if scope == "*":
         synced = await ctx.bot.tree.sync()
-    elif target == "-":
+    elif scope == "-":
         ctx.bot.tree.clear_commands(guild=ctx.guild)
         await ctx.bot.tree.sync(guild=ctx.guild)
         synced = []
@@ -129,7 +129,7 @@ async def sync(ctx: commands.Context, target: Optional[Literal["*", ".", "-"]] =
         synced = await ctx.bot.tree.sync(guild=ctx.guild)
 
     await ctx.send(
-        f"Synced {len(synced)} commands {'globally' if target == '*' else 'to the current guild.'}"
+        f"Synced {len(synced)} commands {'globally' if scope == '*' else 'to the current guild.'}"
     )
 
 

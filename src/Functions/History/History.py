@@ -1,14 +1,13 @@
 from typing import Optional
 from datetime import datetime
 
-import discord
 from discord.ext import commands
 from discord import app_commands
 
 from hooks.discord.use_discord import make_embed, get_user_mention, get_user
 from utils.guessr.history import read_history, read_one_history
 from utils.bot.utils import bot_make_icon
-from const import BOT_COLOR
+from const import BOT_COLOR, MAX_AMOUNT
 
 
 class History(commands.Cog):
@@ -19,9 +18,17 @@ class History(commands.Cog):
         name="history", description="Checks recent guessrs history."
     )
     @app_commands.describe(
-        history_id="Targets a specific game from history with its ID."
+        history_id="Targets a specific game from history with its ID.",
+        start="The starting index (one-based index).",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
     )
-    async def history(self, ctx: commands.Context, history_id: Optional[str]):
+    async def history(
+        self,
+        ctx: commands.Context,
+        history_id: Optional[str],
+        start: Optional[int] = 1,
+        amount: Optional[int] = 10,
+    ):
         await ctx.defer()
 
         if history_id:
@@ -60,23 +67,64 @@ class History(commands.Cog):
                 await ctx.send(embed=embed, file=bot_make_icon())
         else:
             history = await read_history()
+            history_length = len(history)
+
+            if amount > MAX_AMOUNT:
+                await ctx.send(
+                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    ephemeral=True,
+                )
+
+                return
+            elif amount <= 0:
+                await ctx.send(
+                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                )
+
+                return
+
+            if history_length != 0:
+                if start > history_length:
+                    await ctx.send(
+                        f"Start value cannot exceed {history_length}!",
+                        ephemeral=True,
+                    )
+
+                    return
+                elif start <= 0:
+                    await ctx.send(
+                        "Starting index cannot be less than 0!",
+                        ephemeral=True,
+                    )
+
+                    return
+
+            adjusted_amount = (
+                (start + amount) - 1
+                if not start + amount > history_length
+                else history_length
+            )
+            adjusted_end_index = (
+                adjusted_amount if start - 1 != history_length else adjusted_amount + 1
+            )
             history_reversed = history[::-1]
-            history_limited = history_reversed[:10]
             history_entry = []
 
-            for index, game in enumerate(history_limited, start=1):
-                history_entry.append(
-                    f"{index}. **{game['solved']}** solved, **{game['timeout']}** timed out, **{game['skipped']}** skipped, **{game['total']}** total, **{game['difficulty']}** difficulty\nfinished at • <t:{game['createdStamp']}:F> | ID: `{game['historyId']}`"
-                )
+            for index, game in enumerate(history_reversed, start=1):
+                entry_message = f"{index}. **{game['solved']}** solved, **{game['timeout']}** timed out, **{game['skipped']}** skipped, **{game['total']}** total, **{game['difficulty']}** difficulty\nfinished at • <t:{game['createdStamp']}:F> | ID: `{game['historyId']}`"
+                history_entry.append(entry_message)
+
+            data_entry = history_entry[start - 1 : adjusted_end_index]
+            data_entry_length = len(data_entry)
+            embed_description = "\n\n".join(data_entry) or "Empty :("
 
             embed = make_embed(
                 "Game History",
-                "\n\n".join(history_entry) + "\n\nShowing the last 10 recorded games."
-                or "Empty :(",
+                embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"PortalGuessr has been played {len(history)} times!",
+                text=f"Showing {data_entry_length} out of {history_length} total.",
                 icon_url="attachment://icon.png",
             )
 

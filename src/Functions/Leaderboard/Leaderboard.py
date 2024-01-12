@@ -7,7 +7,7 @@ from discord import app_commands
 from utils.guessr.lb import get_all_scores, get_score
 from hooks.discord.use_discord import make_embed, get_user, get_user_mention
 from utils.bot.utils import bot_make_icon
-from const import BOT_COLOR
+from const import BOT_COLOR, MAX_AMOUNT
 
 
 class Leaderboard(commands.Cog):
@@ -18,12 +18,16 @@ class Leaderboard(commands.Cog):
     @app_commands.describe(
         user="Targets a user the current server in the leaderboard",
         user_id="Targets a user in the leaderboard by their Discord's id.",
+        start="The starting index (one-based index).",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
     )
     async def lb(
         self,
         ctx: commands.Context,
         user: Optional[discord.User] = None,
         user_id: Optional[str] = None,
+        start: Optional[int] = 1,
+        amount: Optional[int] = 10,
     ):
         await ctx.defer()
 
@@ -99,6 +103,38 @@ class Leaderboard(commands.Cog):
                 await ctx.send(embed=embed, file=bot_make_icon())
         else:
             users_stats = await get_all_scores()
+            users_stats_length = len(users_stats)
+
+            if amount > MAX_AMOUNT:
+                await ctx.send(
+                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    ephemeral=True,
+                )
+
+                return
+            elif amount <= 0:
+                await ctx.send(
+                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                )
+
+                return
+
+            if users_stats_length != 0:
+                if start > users_stats_length:
+                    await ctx.send(
+                        f"Start value cannot exceed {users_stats_length}!",
+                        ephemeral=True,
+                    )
+
+                    return
+                elif start <= 0:
+                    await ctx.send(
+                        "Starting index cannot be less than or equal to 0!",
+                        ephemeral=True,
+                    )
+
+                    return
+
             sorted_users_stat = sorted(
                 users_stats,
                 reverse=True,
@@ -112,19 +148,34 @@ class Leaderboard(commands.Cog):
                 ),
             )
             users_stat_entry = []
+            adjusted_amount = (
+                (start + amount) - 1
+                if not start + amount > users_stats_length
+                else users_stats_length
+            )
+            adjusted_end_index = (
+                adjusted_amount if start != users_stats_length else adjusted_amount + 1
+            )
 
             for rank, user_stats in enumerate(sorted_users_stat, start=1):
                 user_mention = await get_user_mention(self.bot, user_stats["userId"])
                 easy, medium, hard, veryhard = user_stats["scores"].values()
                 elo = sum([easy * 3, medium * 5, hard * 10, veryhard * 15])
 
-                users_stat_entry.append(f"{rank}. {user_mention} at **{elo}** ELO")
+                entry_message = f"{rank}. {user_mention} at **{elo}** ELO"
+                users_stat_entry.append(entry_message)
+
+            data_entry = users_stat_entry[start - 1 : adjusted_end_index]
+            data_entry_length = len(data_entry)
+            embed_description = "\n".join(data_entry) or "Empty :("
 
             lb_embed = make_embed(
-                "Leaderboard", "\n".join(users_stat_entry) or "Empty :(", BOT_COLOR
+                "Leaderboard",
+                embed_description,
+                BOT_COLOR,
             )
             lb_embed.set_footer(
-                text=f"There are {len(users_stats)} users in the leaderboard!",
+                text=f"Showing {data_entry_length} out of {users_stats_length} total.",
                 icon_url="attachment://icon.png",
             )
 
