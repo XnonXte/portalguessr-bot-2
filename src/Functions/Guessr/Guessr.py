@@ -29,7 +29,7 @@ from const import (
 
 
 class Guessr(commands.Cog):
-    channels_running = set()
+    active_game_channels = set()
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -55,7 +55,7 @@ class Guessr(commands.Cog):
                     and message.content.lower() in CHAMBERS + ["skip", "stop"]
                 )
 
-            if ctx.channel.id in self.channels_running:
+            if ctx.channel.id in self.active_game_channels:
                 await ctx.send(
                     "Only one game can be running at the same channel at the same time!",
                     ephemeral=True,
@@ -98,7 +98,7 @@ class Guessr(commands.Cog):
             except Exception as e:
                 raise commands.CommandError(e)
 
-            self.channels_running.append(ctx.channel.id)
+            self.active_game_channels.append(ctx.channel.id)
 
             game_log = {
                 # Data per session.
@@ -360,7 +360,7 @@ class Guessr(commands.Cog):
 
             await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
         except Exception as e:
-            self.channels_running.remove(ctx.channel.id)
+            self.active_game_channels.remove(ctx.channel.id)
 
             await ctx.send(
                 embed=make_embed("Error detected! Game is stopped!", color=BOT_COLOR)
@@ -368,7 +368,7 @@ class Guessr(commands.Cog):
 
             raise commands.CommandError(e)
         else:
-            self.channels_running.remove(ctx.channel.id)
+            self.active_game_channels.remove(ctx.channel.id)
 
 
 async def setup(bot):
