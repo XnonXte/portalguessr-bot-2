@@ -133,4 +133,5 @@ async def sync(ctx: commands.Context, scope: Optional[Literal["*", ".", "-"]] = 
     )
 
 
-bot.run(BOT_TOKEN)
+if __name__ == "__main__":
+    bot.run(BOT_TOKEN)
