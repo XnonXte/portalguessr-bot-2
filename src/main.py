@@ -115,23 +115,5 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         raise error
 
 
-@bot.command()
-@commands.is_owner()
-async def sync(ctx: commands.Context, scope: Optional[Literal["*", ".", "-"]] = "*"):
-    if scope == "*":
-        synced = await ctx.bot.tree.sync()
-    elif scope == "-":
-        ctx.bot.tree.clear_commands(guild=ctx.guild)
-        await ctx.bot.tree.sync(guild=ctx.guild)
-        synced = []
-    else:
-        ctx.bot.tree.copy_global_to(guild=ctx.guild)
-        synced = await ctx.bot.tree.sync(guild=ctx.guild)
-
-    await ctx.send(
-        f"Synced {len(synced)} commands {'globally' if scope == '*' else 'to the current guild.'}"
-    )
-
-
 if __name__ == "__main__":
     bot.run(BOT_TOKEN)
