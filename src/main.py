@@ -39,7 +39,6 @@ BOT_TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.default()
 intents.message_content = True
-
 bot_activity = discord.Activity(
     type=discord.ActivityType.playing, name=f"{BOT_PREFIX} | {BOT_STATUS}"
 )

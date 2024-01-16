@@ -15,7 +15,7 @@ from const import (
 )
 
 
-class MyCog(commands.Cog):
+class Owner(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -166,9 +166,7 @@ class MyCog(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def sync(
-        ctx: commands.Context, scope: Optional[Literal["*", ".", "-"]] = "*"
-    ):
+    async def sync(self, ctx, scope: Optional[Literal["*", ".", "-"]] = "*"):
         if scope == "*":
             synced = await ctx.bot.tree.sync()
         elif scope == "-":
@@ -185,4 +183,4 @@ class MyCog(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(MyCog(bot))
+    await bot.add_cog(Owner(bot))
