@@ -21,7 +21,8 @@ class Review(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(
-        name="review", description="Starts a review session for pending submissions."
+        name="review",
+        description="Starts a review session for pending submissions (owner only command).",
     )
     @app_commands.describe(amount="The amount of submissions you want to review.")
     async def review(self, ctx, amount: Optional[int] = 0):
