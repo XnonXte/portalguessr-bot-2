@@ -74,6 +74,8 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     # Error handler.
     if isinstance(error, commands.CommandNotFound):
         await ctx.send(f"Unknown command: `{ctx.message.content[len(BOT_PREFIX):]}`")
+    elif isinstance(error, commands.NoPrivateMessage):
+        await ctx.send("This command can only be used inside a server!")
     elif isinstance(error, commands.NotOwner):
         await ctx.send(
             embed=make_embed("Forbidden command!", f"```{error}```", DANGER_COLOR)
