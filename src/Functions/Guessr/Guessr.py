@@ -35,6 +35,7 @@ class Guessr(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="guess", description="Starts a PortalGuessr game.")
+    @commands.guild_only()
     @app_commands.describe(
         difficulty="The desired difficulty (leave blank to keep it random).",
         rounds=f"The amount of rounds in a session (max: {MAX_ROUNDS}).",
@@ -55,6 +56,7 @@ class Guessr(commands.Cog):
                     and message.content.lower() in CHAMBERS + ["skip", "stop"]
                 )
 
+            # Couple of checks.
             if ctx.channel.id in self.active_game_channels:
                 await ctx.send(
                     "Only one game can be running at the same channel at the same time!",
@@ -62,8 +64,6 @@ class Guessr(commands.Cog):
                 )
 
                 return
-
-            self.active_game_channels.add(ctx.channel.id)
 
             if ctx.guild.id == P1SR_GUILD_ID:
                 if ctx.channel.id != P1SR_SPAM_CHANNEL_ID:
@@ -88,6 +88,8 @@ class Guessr(commands.Cog):
                 )
 
                 return
+
+            self.active_game_channels.add(ctx.channel.id)
 
             await ctx.defer()
 
