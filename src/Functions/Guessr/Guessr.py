@@ -5,19 +5,20 @@ from typing import Literal, Optional
 from discord import app_commands
 from discord.ext import commands
 
-from utils.guessr.lb_utils import update_user_stats
-from utils.guessr.chambers import (
+from utils.game.lb import update_user_stats
+from utils.game.chambers import (
     get_chambers,
     get_random_chambers,
 )
-from utils.guessr.utils import (
+from utils.game.guessr import (
     find_mvp,
     get_color,
     get_timeout,
 )
-from hooks.discord.use_discord import make_embed, get_user_mention
-from utils.bot.utils import bot_make_icon
-from utils.guessr.history import add_history
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from utils.bot.make_icon import make_icon
+from utils.game.history import add_history
 from const import (
     BOT_COLOR,
     BOT_COLOR_WHITE,
@@ -42,21 +43,11 @@ class Guessr(commands.Cog):
     )
     async def guess(
         self,
-        ctx: commands.Context,
+        ctx,
         difficulty: Optional[Literal["Easy", "Medium", "Hard", "Very Hard"]] = "Random",
         rounds: Optional[int] = 10,
     ):
         try:
-
-            def response_is_valid(message):
-                # Check the validity of the respondent's message.
-                return (
-                    message.guild.id == ctx.guild.id
-                    and message.channel.id == ctx.channel.id
-                    and message.content.lower() in CHAMBERS + ["skip", "stop"]
-                )
-
-            # Couple of checks.
             if ctx.channel.id in self.active_game_channels:
                 await ctx.send(
                     "Only one game can be running at the same channel at the same time!",
@@ -76,34 +67,28 @@ class Guessr(commands.Cog):
 
             if rounds <= 0:
                 await ctx.send(
-                    "The amount of rounds must be higher than 0!",
+                    "Rounds must be higher than 0!",
                     ephemeral=True,
                 )
 
                 return
             elif rounds > MAX_ROUNDS:
                 await ctx.send(
-                    "You're exceeding the rounds limit!",
+                    "You're exceeding rounds limit!",
                     ephemeral=True,
                 )
 
                 return
 
-            self.active_game_channels.add(ctx.channel.id)
-
             await ctx.defer()
-
-            try:
-                chambers = (
-                    await get_chambers(rounds, difficulty)
-                    if difficulty != "Random"
-                    else await get_random_chambers(rounds)
-                )
-            except Exception as e:
-                raise commands.CommandError(e)
+            chambers = (
+                await get_chambers(rounds, difficulty)
+                if difficulty != "Random"
+                else await get_random_chambers(rounds)
+            )
 
             game_log = {
-                # Data per session.
+                # Data per game.
                 "solved": 0,
                 "timeout": 0,
                 "skipped": 0,
@@ -114,10 +99,14 @@ class Guessr(commands.Cog):
             chambers_log = [chamber["fileId"] for chamber in chambers]
             game_stopped = False
 
+            self.active_game_channels.add(ctx.channel.id)
+
             for round_count, chamber in enumerate(chambers, start=1):
-                image_url = chamber["url"]
-                answer = chamber["answer"]
-                guessr_difficulty = chamber["difficulty"]
+                image_url, answer, guessr_difficulty = (
+                    chamber["url"],
+                    chamber["answer"],
+                    chamber["difficulty"],
+                )
 
                 start_time = time.time()
                 elapsed_time = 0
@@ -127,7 +116,7 @@ class Guessr(commands.Cog):
                     # Data per guessr.
                     "user_ids_have_answered": [],
                     "answer_count": 0,
-                    "answer_count_max": 5,
+                    "answer_count_max": 7,
                 }
 
                 embed = make_embed(
@@ -140,19 +129,22 @@ class Guessr(commands.Cog):
                     icon_url="attachment://icon.png",
                 )
 
-                await ctx.send(
-                    embed=embed,
-                    file=bot_make_icon(),
-                ) if round_count == 1 else await ctx.channel.send(
-                    embed=embed,
-                    file=bot_make_icon(),
-                )
+                if round_count == 1:
+                    await ctx.send(embed=embed, file=make_icon())
+                else:
+                    await ctx.channel.send(
+                        embed=embed,
+                        file=make_icon(),
+                    )
 
                 while True:
+                    # Forever loop, but not quite a forever loop.
                     try:
                         response = await self.bot.wait_for(
                             "message",
-                            check=response_is_valid,
+                            check=lambda m: m.guild.id == ctx.guild.id
+                            and m.channel.id == ctx.channel.id
+                            and m.content.lower() in CHAMBERS + ["skip", "stop"],
                             timeout=timeout - elapsed_time,
                         )
 
@@ -164,8 +156,13 @@ class Guessr(commands.Cog):
                                 # Responder must be the prompter.
                                 if response.content.lower() == "skip":
                                     if guessr_tmp_data["answer_count"] == 0:
-                                        await ctx.send(
-                                            "Have one answer the current guessr first!"
+                                        await response.reply(
+                                            embed=make_embed(
+                                                title="Have one answer first!",
+                                                color=BOT_COLOR,
+                                            ),
+                                            mention_author=False,
+                                            delete_after=5,
                                         )
 
                                         continue
@@ -184,10 +181,11 @@ class Guessr(commands.Cog):
                                     if round_count == 1:
                                         await response.reply(
                                             embed=make_embed(
-                                                title="Finish the first round first to stop the game!",
+                                                title="Finish the first round first!",
                                                 color=BOT_COLOR,
                                             ),
                                             mention_author=False,
+                                            delete_after=5,
                                         )
 
                                         continue
@@ -259,13 +257,12 @@ class Guessr(commands.Cog):
 
                         if (
                             guessr_tmp_data["answer_count"]
-                            == guessr_tmp_data["answer_count_max"]
+                            >= guessr_tmp_data["answer_count_max"]
                         ):
-                            # After 5 respondents.
                             await ctx.channel.send(
                                 embed=make_embed(
-                                    title="Game Finished!",
-                                    description=f"5 users have attempted at guessing this chamber, but no one got it right!\nThe chamber is {answer}!",
+                                    title="Guessr Finished!",
+                                    description=f"7 people have tried to answer this guessr, but no one got it right! The chamber is {answer}!",
                                     color=BOT_COLOR,
                                 )
                             )
@@ -307,29 +304,24 @@ class Guessr(commands.Cog):
                     break
 
             total_chambers = len(chambers)
-            solved_count = game_log["solved"]
-            unsolved_count = game_log["timeout"]
-            skipped_count = game_log["skipped"]
-            game_id = None
+            solved_count, unsolved_count, skipped_count = (
+                game_log["solved"],
+                game_log["timeout"],
+                game_log["skipped"],
+            )
             user_mvp = find_mvp(game_log["user_ids_correct"]) or ""
             user_mvp_mention = await get_user_mention(self.bot, user_mvp)
-
-            try:
-                # Saving game result to the database.
-                game_id = await add_history(
-                    total_chambers,
-                    solved_count,
-                    unsolved_count,
-                    skipped_count,
-                    user_mvp,
-                    game_log["user_ids_participated"],
-                    chambers_log,
-                    str(ctx.author.id),
-                    difficulty,
-                )
-            except Exception as e:
-                raise commands.CommandError(e)
-
+            history_id = await add_history(
+                total_chambers,
+                solved_count,
+                unsolved_count,
+                skipped_count,
+                user_mvp,
+                game_log["user_ids_participated"],
+                chambers_log,
+                str(ctx.author.id),
+                difficulty,
+            )
             users_participated = [
                 await get_user_mention(self.bot, user_id)
                 for user_id in game_log["user_ids_participated"]
@@ -344,11 +336,7 @@ class Guessr(commands.Cog):
                 if game_log["user_ids_participated"]
                 else "No one participated :("
             )
-            footer_text = (
-                f"History ID: {game_id}"
-                if game_id != None
-                else "This game is not recorded! Please contact the developer!"
-            )
+            footer_text = f"History ID: {history_id}"
 
             embed_stats = make_embed(
                 "Game result",
@@ -360,7 +348,7 @@ class Guessr(commands.Cog):
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.channel.send(embed=embed_stats, file=bot_make_icon())
+            await ctx.channel.send(embed=embed_stats, file=make_icon())
         except Exception as e:
             self.active_game_channels.discard(ctx.channel.id)
 

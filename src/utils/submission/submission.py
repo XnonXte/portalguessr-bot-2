@@ -1,11 +1,11 @@
-from hooks.web_requests.use_aiohttp import use_aiohttp
+from hooks.aiohttp.make_request import make_request
 from const import SERVER_URL
 
 
 async def submit_submission(imageUrl, difficulty, answer, submitter, bhHash):
     url = f"{SERVER_URL}/bot/submissions"
 
-    return await use_aiohttp(
+    return await make_request(
         url,
         "POST",
         {
@@ -21,25 +21,25 @@ async def submit_submission(imageUrl, difficulty, answer, submitter, bhHash):
 async def read_submission():
     url = f"{SERVER_URL}/bot/submissions"
 
-    return await use_aiohttp(url)
+    return await make_request(url)
 
 
 async def read_one_submission(submission_id):
     url = f"{SERVER_URL}/bot/submissions/{submission_id}"
 
-    return await use_aiohttp(url)
+    return await make_request(url)
 
 
 async def read_submission_by_status(status):
     url = f"{SERVER_URL}/bot/submissions/status/{status}"
 
-    return await use_aiohttp(url)
+    return await make_request(url)
 
 
 async def update_submission(submission_id, status):
     url = f"{SERVER_URL}/bot/submissions/{submission_id}"
 
-    return await use_aiohttp(url, "PATCH", {"status": status})
+    return await make_request(url, "PATCH", {"status": status})
 
 
 async def accept_submission(submission_id):
@@ -60,7 +60,7 @@ async def accept_submission(submission_id):
     )
     new_chamber_url = f"{SERVER_URL}/chambers/new"
 
-    return await use_aiohttp(
+    return await make_request(
         new_chamber_url,
         "POST",
         {
@@ -76,4 +76,4 @@ async def accept_submission(submission_id):
 async def delete_submission(submission_id):
     url = f"{SERVER_URL}/bot/submissions/{submission_id}"
 
-    return await use_aiohttp(url, "DELETE")
+    return await make_request(url, "DELETE")

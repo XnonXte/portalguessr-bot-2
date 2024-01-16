@@ -4,9 +4,11 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from utils.guessr.lb import get_all_scores, get_score
-from hooks.discord.use_discord import make_embed, get_user, get_user_mention
-from utils.bot.utils import bot_make_icon
+from utils.game.lb import get_all_scores, get_score
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from hooks.discord.get_user import get_user
+from utils.bot.make_icon import make_icon
 from const import BOT_COLOR, MAX_AMOUNT
 
 
@@ -23,7 +25,7 @@ class Leaderboard(commands.Cog):
     )
     async def lb(
         self,
-        ctx: commands.Context,
+        ctx,
         user: Optional[discord.User] = None,
         user_id: Optional[str] = None,
         start: Optional[int] = 1,
@@ -59,7 +61,7 @@ class Leaderboard(commands.Cog):
                 )
                 embed.set_author(name=user.name, icon_url=user.avatar.url)
 
-                await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=make_icon())
         elif user_id:
             user_id_stats = await get_score(user_id)
 
@@ -100,7 +102,7 @@ class Leaderboard(commands.Cog):
                 )
                 embed.set_author(name=target_user_name, icon_url=target_user_avatar)
 
-                await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=make_icon())
         else:
             users_stats = await get_all_scores()
             users_stats_length = len(users_stats)
@@ -179,7 +181,7 @@ class Leaderboard(commands.Cog):
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.send(embed=lb_embed, file=bot_make_icon())
+            await ctx.send(embed=lb_embed, file=make_icon())
 
 
 async def setup(bot):

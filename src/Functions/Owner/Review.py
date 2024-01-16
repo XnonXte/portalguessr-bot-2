@@ -4,15 +4,17 @@ from datetime import datetime
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed, get_user_mention, get_user
-from utils.submission.submit import (
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from hooks.discord.get_user import get_user
+from utils.submission.submission import (
     read_submission_by_status,
     update_submission,
     accept_submission,
 )
 from utils.owner.check_id import check_is_owner
-from utils.submission.utils import get_color_by_status
-from utils.bot.utils import bot_make_icon
+from utils.submission.get_color_by_status import get_color_by_status
+from utils.bot.make_icon import make_icon
 from const import DEFAULT_FOOTER_TEXT, BOT_COLOR
 
 
@@ -79,7 +81,7 @@ class Review(commands.Cog):
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.send(embed=embed, file=bot_make_icon())
+            await ctx.send(embed=embed, file=make_icon())
 
             try:
                 response = await self.bot.wait_for(
@@ -110,7 +112,7 @@ class Review(commands.Cog):
 
                     await ctx.send(
                         embed=embed,
-                        file=bot_make_icon(),
+                        file=make_icon(),
                     )
                 elif response.content.lower() == "reject":
                     await ctx.send("What's the reason for rejecting?")
@@ -139,7 +141,7 @@ class Review(commands.Cog):
 
                     await ctx.send(
                         embed=embed,
-                        file=bot_make_icon(),
+                        file=make_icon(),
                     )
                 elif response.content.lower() == "skip":
                     await ctx.send(

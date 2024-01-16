@@ -4,15 +4,21 @@ import os
 API_KEY = os.getenv("API_KEY")
 
 
-async def use_aiohttp(url, method="GET", data=None, headers={"x-api-key": API_KEY}):
+async def make_request(
+    url, method="GET", json=None, headers=None, params=None, data=None
+):
     async with aiohttp.ClientSession() as session:
         async with session.request(
             method,
             url,
-            json=data,
-            headers=headers if method in ["POST", "PATCH", "DELETE"] else None,
+            json=json,
+            params=params,
+            data=data,
+            headers=headers
+            if method not in ["POST", "PATCH", "DELETE"]
+            else {"x-api-key": API_KEY},
         ) as response:
-            if response.status < 400:
+            if response.ok:
                 return await response.json()
             else:
                 raise Exception(f"Error: {response.status} - {await response.text()}")

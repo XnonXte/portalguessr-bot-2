@@ -4,11 +4,12 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed, get_user_mention
-from utils.guessr.lb import add_score, remove_score
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from utils.game.lb import add_score, remove_score
 from utils.owner.check_id import check_is_owner
-from utils.submission.submit import update_submission, accept_submission
-from utils.bot.utils import bot_make_icon
+from utils.submission.submission import update_submission, accept_submission
+from utils.bot.make_icon import make_icon
 from const import (
     BOT_COLOR,
     DEFAULT_FOOTER_TEXT,
@@ -62,7 +63,7 @@ class Owner(commands.Cog):
                 text=f"Database ID: {result['_id']}", icon_url="attachment://icon.png"
             )
 
-            await ctx.send(embed=embed, file=bot_make_icon())
+            await ctx.send(embed=embed, file=make_icon())
         except Exception as e:
             raise commands.CommandError(e)
 
@@ -92,7 +93,7 @@ class Owner(commands.Cog):
                     text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png"
                 )
 
-                await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=make_icon())
         except Exception as e:
             raise commands.CommandError(e)
 
@@ -129,7 +130,7 @@ class Owner(commands.Cog):
 
                 await ctx.send(
                     embed=embed,
-                    file=bot_make_icon(),
+                    file=make_icon(),
                 )
         except Exception as e:
             raise commands.CommandError(e)
@@ -159,7 +160,7 @@ class Owner(commands.Cog):
 
             await ctx.send(
                 embed=embed,
-                file=bot_make_icon(),
+                file=make_icon(),
             )
         except Exception as e:
             raise commands.CommandError(e)

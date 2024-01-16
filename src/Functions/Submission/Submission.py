@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 
 from utils.imgbb.upload_image import upload_image
-from utils.submission.submit import (
+from utils.submission.submission import (
     submit_submission,
     read_one_submission,
     read_submission,
@@ -14,9 +14,11 @@ from utils.submission.submit import (
 )
 
 from utils.owner.check_server import check_is_testing_server
-from hooks.discord.use_discord import make_embed, get_user, get_user_mention
-from utils.bot.utils import bot_make_icon
-from utils.submission.utils import get_color_by_status
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from hooks.discord.get_user import get_user
+from utils.bot.make_icon import make_icon
+from utils.submission.get_color_by_status import get_color_by_status
 from const import BOT_COLOR, MAX_AMOUNT, SUBMISSION_CHANNEL_ID
 
 
@@ -95,7 +97,7 @@ class Submission(commands.Cog):
             ).set_footer(
                 text=f"Submission ID: {submission_id}", icon_url="attachment://icon.png"
             ),
-            file=bot_make_icon(),
+            file=make_icon(),
         )
 
     @commands.hybrid_command(
@@ -154,7 +156,7 @@ class Submission(commands.Cog):
                     icon_url="attachment://icon.png",
                 )
 
-                await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=make_icon())
         else:
             submissions = (
                 await read_submission_by_status(status.lower())
@@ -231,7 +233,7 @@ class Submission(commands.Cog):
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.send(embed=embed, file=bot_make_icon())
+            await ctx.send(embed=embed, file=make_icon())
 
 
 async def setup(bot):

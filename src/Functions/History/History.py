@@ -4,9 +4,11 @@ from datetime import datetime
 from discord.ext import commands
 from discord import app_commands
 
-from hooks.discord.use_discord import make_embed, get_user_mention, get_user
-from utils.guessr.history import read_history, read_one_history
-from utils.bot.utils import bot_make_icon
+from hooks.discord.make_embed import make_embed
+from hooks.discord.get_user_mention import get_user_mention
+from hooks.discord.get_user import get_user
+from utils.game.history import read_history, read_one_history
+from utils.bot.make_icon import make_icon
 from const import BOT_COLOR, MAX_AMOUNT
 
 
@@ -24,7 +26,7 @@ class History(commands.Cog):
     )
     async def history(
         self,
-        ctx: commands.Context,
+        ctx,
         history_id: Optional[str],
         start: Optional[int] = 1,
         amount: Optional[int] = 10,
@@ -64,7 +66,7 @@ class History(commands.Cog):
                     icon_url="attachment://icon.png",
                 )
 
-                await ctx.send(embed=embed, file=bot_make_icon())
+                await ctx.send(embed=embed, file=make_icon())
         else:
             history = await read_history()
             history_length = len(history)
@@ -128,7 +130,7 @@ class History(commands.Cog):
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.send(embed=embed, file=bot_make_icon())
+            await ctx.send(embed=embed, file=make_icon())
 
 
 async def setup(bot):

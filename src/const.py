@@ -3,7 +3,7 @@ import discord
 # Bot's constants.
 BOT_COLOR = discord.Color.from_str("#cb3030")
 BOT_COLOR_WHITE = discord.Color.from_str("#ededed")
-BOT_VERSION = "v0.0.4"
+BOT_VERSION = "v0.0.5"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
 
@@ -38,13 +38,17 @@ MEDIUM_COLOR = discord.Color.from_str("#fedc56")
 HARD_COLOR = discord.Color.from_str("#ff5733")
 VERY_HARD_COLOR = discord.Color.from_str("#36cbd3")
 DANGER_COLOR = discord.Color.from_str("#FF0000")
-MAX_ROUNDS = 20
+MAX_ROUNDS = 25
 
 # URLs constants.
 SERVER_URL = (
     "https://portalguessr-api.cyclic.app"  # Fill in your own portalguessr-api URL.
 )
 IMGBB_SERVER_URL = "https://api.imgbb.com/1/upload"
+DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
+GITHUB_URL = "https://github.com/XnonXte/PortalGuessr-Bot-2"
+INVITE_URL = "https://discord.com/api/oauth2/authorize?client_id=1117773586522968105&permissions=277025492032&scope=bot"
+
 
 # Embed commands.
 GENERAL_COMMANDS = {
@@ -76,7 +80,6 @@ OWNER_USER_ID = 706330866267193344  # Fill in with your own user ID on Discord.
 TESTING_SERVER_ID = (
     1103578001318346812  # Fill in with your own testing server's ID on Discord.
 )
-DISCORD_INVITE = "https://discord.com/invite/dDbgtFb2KC"
 MAX_AMOUNT = 20
 
 # P1SR constants.

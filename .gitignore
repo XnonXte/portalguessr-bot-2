@@ -3,3 +3,5 @@ __pycache__
 config.env
 ideas
 todos.txt
+dev.sh
+start.sh

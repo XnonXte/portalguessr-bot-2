@@ -1,13 +1,13 @@
-from hooks.web_requests.use_aiohttp import use_aiohttp
+from hooks.aiohttp.make_request import make_request
 from const import SERVER_URL
 
 
 async def read_history():
-    return await use_aiohttp(f"{SERVER_URL}/bot/histories")
+    return await make_request(f"{SERVER_URL}/bot/histories")
 
 
 async def read_one_history(history_id):
-    return await use_aiohttp(f"{SERVER_URL}/bot/histories/{history_id}")
+    return await make_request(f"{SERVER_URL}/bot/histories/{history_id}")
 
 
 async def add_history(
@@ -32,12 +32,12 @@ async def add_history(
         "prompterUserId": prompterUserId,
         "difficulty": difficulty,
     }
-    response = await use_aiohttp(f"{SERVER_URL}/bot/histories", "POST", data)
+    response = await make_request(f"{SERVER_URL}/bot/histories", "POST", data)
 
     return response["historyId"]  # Returns the history's id.
 
 
 async def remove_history(historyId):
-    response = await use_aiohttp(f"{SERVER_URL}/histories/{historyId}", "DELETE")
+    response = await make_request(f"{SERVER_URL}/histories/{historyId}", "DELETE")
 
     return response["acknowledged"] == True

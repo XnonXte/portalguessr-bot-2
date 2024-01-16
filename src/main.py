@@ -24,13 +24,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 import os
-from typing import Literal, Optional
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from hooks.discord.use_discord import make_embed
+from hooks.discord.make_embed import make_embed
 from const import BOT_PREFIX, BOT_STATUS, DISCORD_INVITE, DANGER_COLOR
 
 load_dotenv("./config.env")
@@ -70,8 +69,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    # Error handler.
+async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         await ctx.send(f"Unknown command: `{ctx.message.content[len(BOT_PREFIX):]}`")
     elif isinstance(error, commands.NoPrivateMessage):
