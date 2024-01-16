@@ -72,7 +72,7 @@ class Guessr(commands.Cog):
                         ephemeral=True,
                     )
 
-                return
+                    return
 
             if rounds <= 0:
                 await ctx.send(
