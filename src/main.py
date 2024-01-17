@@ -90,6 +90,10 @@ async def on_command_error(ctx, error):
                 "Missing required argument(s)!", f"```{error}```", DANGER_COLOR
             )
         )
+    elif isinstance(error, commands.BadLiteralArgument):
+        await ctx.send(
+            embed=make_embed("Invalid argument(s)!", f"```{error}```", DANGER_COLOR)
+        )
     elif isinstance(error, commands.GuildNotFound):
         await ctx.send(
             embed=make_embed(
