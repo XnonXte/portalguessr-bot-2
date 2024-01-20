@@ -6,7 +6,7 @@ from discord import app_commands
 
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
-from utils.game.lb import add_score, remove_score
+from utils.game.lb import add_statistic, remove_statistic
 from utils.owner.check_id import check_is_owner
 from utils.submission.submission import update_submission, accept_submission
 from utils.bot.make_icon import make_icon
@@ -17,6 +17,12 @@ from const import (
 
 
 class Owner(commands.Cog):
+    """Cog for owner related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -53,7 +59,7 @@ class Owner(commands.Cog):
         }
 
         try:
-            result = await add_score(user_id, data)
+            result = await add_statistic(user_id, data)
             user_mention = await get_user_mention(self.bot, user_id)
 
             embed = make_embed(
@@ -77,7 +83,7 @@ class Owner(commands.Cog):
         await ctx.defer()
 
         try:
-            result = await remove_score(int(user_id))
+            result = await remove_statistic(int(user_id))
 
             if result["deletedCount"] == 0:
                 raise commands.UserNotFound(user_id)

@@ -7,12 +7,19 @@ from discord import app_commands
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
 from hooks.discord.get_user import get_user
+from hooks.python.use_enumerate import use_enumerate
 from utils.game.history import read_history, read_one_history
 from utils.bot.make_icon import make_icon
 from const import BOT_COLOR, MAX_AMOUNT
 
 
 class History(commands.Cog):
+    """Cog for history related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -22,7 +29,7 @@ class History(commands.Cog):
     @app_commands.describe(
         history_id="Targets a specific game from history with its ID.",
         start="The starting index (one-based index).",
-        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT})",
     )
     async def history(
         self,
@@ -68,65 +75,49 @@ class History(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            history = await read_history()
-            history_length = len(history)
-
             if amount > MAX_AMOUNT:
                 await ctx.send(
-                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_AMOUNT}",
                     ephemeral=True,
                 )
 
                 return
             elif amount <= 0:
                 await ctx.send(
-                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                    "The amount value can't be less than or equal to 0!", ephemeral=True
                 )
 
                 return
 
-            if history_length != 0:
-                if start > history_length:
-                    await ctx.send(
-                        f"Start value cannot exceed {history_length}!",
-                        ephemeral=True,
-                    )
+            if start <= 0:
+                await ctx.send(
+                    "The starting number can't be less than or equal to 0!",
+                    ephemeral=True,
+                )
 
-                    return
-                elif start <= 0:
-                    await ctx.send(
-                        "Starting index cannot be less than 0!",
-                        ephemeral=True,
-                    )
+                return
 
-                    return
-
-            adjusted_amount = (
-                (start + amount) - 1
-                if not start + amount > history_length
-                else history_length
-            )
-            adjusted_end_index = (
-                adjusted_amount if start - 1 != history_length else adjusted_amount + 1
-            )
-            history_reversed = history[::-1]
+            history = await read_history(start, amount)
             history_entry = []
 
-            for index, game in enumerate(history_reversed, start=1):
-                entry_message = f"{index}. **{game['solved']}** solved, **{game['timeout']}** timed out, **{game['skipped']}** skipped, **{game['total']}** total, **{game['difficulty']}** difficulty\nfinished at • <t:{game['createdStamp']}:F> | ID: `{game['historyId']}`"
-                history_entry.append(entry_message)
+            async def callback(index, item):
+                prompter_mention = await get_user_mention(
+                    self.bot, item["prompterUserId"]
+                )
+                history_entry.append(
+                    f"{index}. Prompted by {prompter_mention} - **{item['difficulty']}** difficulty\nfinished at • <t:{item['createdStamp']}:F> | ID: `{item['historyId']}`"
+                )
 
-            data_entry = history_entry[start - 1 : adjusted_end_index]
-            data_entry_length = len(data_entry)
-            embed_description = "\n\n".join(data_entry) or "Empty :("
+            await use_enumerate(history, callback, start)
 
+            embed_description = "\n\n".join(history_entry) or "Empty :("
             embed = make_embed(
                 "Game History",
                 embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"Showing {data_entry_length} out of {history_length} total.",
+                text=f"Limiting results to {amount} | Starting at {start}",
                 icon_url="attachment://icon.png",
             )
 

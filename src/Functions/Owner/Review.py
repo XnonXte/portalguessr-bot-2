@@ -19,6 +19,12 @@ from const import DEFAULT_FOOTER_TEXT, BOT_COLOR
 
 
 class Review(commands.Cog):
+    """Cog for review related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 

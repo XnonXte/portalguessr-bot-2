@@ -18,20 +18,20 @@ async def submit_submission(imageUrl, difficulty, answer, submitter, bhHash):
     )
 
 
-async def read_submission():
-    url = f"{SERVER_URL}/bot/submissions"
+async def read_submission(start, amount, order="desc"):
+    url = f"{SERVER_URL}/bot/submissions?start={start}&amount={amount}&order={order}"
+
+    return await make_request(url)
+
+
+async def read_submission_by_status(status, start, amount, order="desc"):
+    url = f"{SERVER_URL}/bot/submissions/status/{status}?start={start}&amount={amount}&order={order}"
 
     return await make_request(url)
 
 
 async def read_one_submission(submission_id):
     url = f"{SERVER_URL}/bot/submissions/{submission_id}"
-
-    return await make_request(url)
-
-
-async def read_submission_by_status(status):
-    url = f"{SERVER_URL}/bot/submissions/status/{status}"
 
     return await make_request(url)
 

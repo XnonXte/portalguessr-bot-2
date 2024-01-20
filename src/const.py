@@ -3,7 +3,7 @@ import discord
 # Bot's constants.
 BOT_COLOR = discord.Color.from_str("#cb3030")
 BOT_COLOR_WHITE = discord.Color.from_str("#ededed")
-BOT_VERSION = "v0.0.5"
+BOT_VERSION = "v0.0.6"
 BOT_PREFIX = "!p"
 BOT_STATUS = "portalguessr.vercel.app"
 

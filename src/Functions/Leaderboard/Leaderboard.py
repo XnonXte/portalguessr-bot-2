@@ -4,15 +4,22 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from utils.game.lb import get_all_scores, get_score
+from utils.game.lb import get_statistic, get_statistics
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
 from hooks.discord.get_user import get_user
+from hooks.python.use_enumerate import use_enumerate
 from utils.bot.make_icon import make_icon
 from const import BOT_COLOR, MAX_AMOUNT
 
 
 class Leaderboard(commands.Cog):
+    """Cog for leaderboard related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -21,7 +28,7 @@ class Leaderboard(commands.Cog):
         user="Targets a user the current server in the leaderboard",
         user_id="Targets a user in the leaderboard by their Discord's id.",
         start="The starting index (one-based index).",
-        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT})",
     )
     async def lb(
         self,
@@ -34,14 +41,14 @@ class Leaderboard(commands.Cog):
         await ctx.defer()
 
         if user:
-            user_stats = await get_score(user.id)
+            statistic = await get_statistic(user.id)
 
-            if user_stats == None:
+            if statistic == None:
                 raise commands.UserNotFound(user.id)
             else:
-                easy, medium, hard, veryhard = user_stats["scores"].values()
+                easy, medium, hard, veryhard = statistic["scores"].values()
                 elo = sum([easy * 3, medium * 5, hard * 10, veryhard * 15])
-                started_at = user_stats["createdStamp"]
+                started_at = statistic["createdStamp"]
 
                 embed = make_embed(
                     description=f"{user.mention} stats",
@@ -63,9 +70,9 @@ class Leaderboard(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         elif user_id:
-            user_id_stats = await get_score(user_id)
+            statistic = await get_statistic(user_id)
 
-            if user_id_stats == None:
+            if statistic == None:
                 raise commands.UserNotFound(user_id)
             else:
                 target_user = await get_user(self.bot, user_id)
@@ -80,9 +87,9 @@ class Leaderboard(commands.Cog):
                     else "attachment://icon.png"
                 )
 
-                easy, medium, hard, veryhard = user_id_stats["scores"].values()
+                easy, medium, hard, veryhard = statistic["scores"].values()
                 elo = sum([easy * 3, medium * 5, hard * 10, veryhard * 15])
-                started_at = user_id_stats["createdStamp"]
+                started_at = statistic["createdStamp"]
 
                 embed = make_embed(
                     description=f"{target_user_mention} stats",
@@ -104,84 +111,53 @@ class Leaderboard(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            users_stats = await get_all_scores()
-            users_stats_length = len(users_stats)
-
             if amount > MAX_AMOUNT:
                 await ctx.send(
-                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_AMOUNT}",
                     ephemeral=True,
                 )
 
                 return
             elif amount <= 0:
                 await ctx.send(
-                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                    "The amount value can't be less than or equal to 0!", ephemeral=True
                 )
 
                 return
 
-            if users_stats_length != 0:
-                if start > users_stats_length:
-                    await ctx.send(
-                        f"Start value cannot exceed {users_stats_length}!",
-                        ephemeral=True,
-                    )
+            if start <= 0:
+                await ctx.send(
+                    "The starting number can't be less than or equal to 0!",
+                    ephemeral=True,
+                )
 
-                    return
-                elif start <= 0:
-                    await ctx.send(
-                        "Starting index cannot be less than or equal to 0!",
-                        ephemeral=True,
-                    )
+                return
 
-                    return
+            statistics = await get_statistics(start, amount)
+            statistic_entry = []
 
-            sorted_users_stat = sorted(
-                users_stats,
-                reverse=True,
-                key=lambda user_stat: sum(
-                    [
-                        user_stat["scores"]["Easy"] * 3,
-                        user_stat["scores"]["Medium"] * 5,
-                        user_stat["scores"]["Hard"] * 10,
-                        user_stat["scores"]["Very Hard"] * 15,
-                    ]
-                ),
-            )
-            users_stat_entry = []
-            adjusted_amount = (
-                (start + amount) - 1
-                if not start + amount > users_stats_length
-                else users_stats_length
-            )
-            adjusted_end_index = (
-                adjusted_amount if start != users_stats_length else adjusted_amount + 1
-            )
-
-            for rank, user_stats in enumerate(sorted_users_stat, start=1):
-                user_mention = await get_user_mention(self.bot, user_stats["userId"])
-                easy, medium, hard, veryhard = user_stats["scores"].values()
+            async def callback(index, item):
+                user_mention = await get_user_mention(self.bot, item["userId"])
+                easy, medium, hard, veryhard = item["scores"].values()
                 elo = sum([easy * 3, medium * 5, hard * 10, veryhard * 15])
+                entry_message = f"{index}. {user_mention} at **{elo}** ELO"
 
-                entry_message = f"{rank}. {user_mention} at **{elo}** ELO"
-                users_stat_entry.append(entry_message)
+                statistic_entry.append(entry_message)
 
-            data_entry = users_stat_entry[start - 1 : adjusted_end_index]
-            data_entry_length = len(data_entry)
-            embed_description = "\n".join(data_entry) or "Empty :("
+            await use_enumerate(statistics, callback, start)
 
-            lb_embed = make_embed(
+            embed_description = "\n".join(statistic_entry) or "Empty :("
+            embed = make_embed(
                 "Leaderboard",
                 embed_description,
                 BOT_COLOR,
             )
-            lb_embed.set_footer(
-                text=f"Showing {data_entry_length} out of {users_stats_length} total.",
+            embed.set_footer(
+                text=f"Limiting results to {amount} | Starting at {start}",
                 icon_url="attachment://icon.png",
             )
 
-            await ctx.send(embed=lb_embed, file=make_icon())
+            await ctx.send(embed=embed, file=make_icon())
 
 
 async def setup(bot):

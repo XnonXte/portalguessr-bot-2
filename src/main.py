@@ -29,8 +29,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from hooks.discord.make_embed import make_embed
-from const import BOT_PREFIX, BOT_STATUS, DISCORD_INVITE, DANGER_COLOR
+from const import BOT_PREFIX, BOT_STATUS
 
 load_dotenv("./config.env")
 
@@ -66,56 +65,6 @@ bot = PortalGuessr2(
 @bot.event
 async def on_ready():
     print(f"We have logged in as {bot.user}!")
-
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        await ctx.send(f"Unknown command: `{ctx.message.content[len(BOT_PREFIX):]}`")
-    elif isinstance(error, commands.NoPrivateMessage):
-        await ctx.send("This command can only be used inside a server!")
-    elif isinstance(error, commands.NotOwner):
-        await ctx.send(
-            embed=make_embed("Forbidden command!", f"```{error}```", DANGER_COLOR)
-        )
-    elif isinstance(error, commands.MissingRequiredAttachment):
-        await ctx.send(
-            embed=make_embed(
-                "Missing required attachment!", f"```{error}```", DANGER_COLOR
-            )
-        )
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(
-            embed=make_embed(
-                "Missing required argument(s)!", f"```{error}```", DANGER_COLOR
-            )
-        )
-    elif isinstance(error, commands.BadLiteralArgument):
-        await ctx.send(
-            embed=make_embed("Invalid argument(s)!", f"```{error}```", DANGER_COLOR)
-        )
-    elif isinstance(error, commands.GuildNotFound):
-        await ctx.send(
-            embed=make_embed(
-                "This command must be invoked in the testing server!",
-                f"Join our testing server: {DISCORD_INVITE}",
-                DANGER_COLOR,
-            ),
-        )
-    elif isinstance(error, commands.UserNotFound):
-        await ctx.send(
-            embed=make_embed("User not found!", f"```{error}```", DANGER_COLOR)
-        )
-    elif isinstance(error, commands.BadArgument):
-        await ctx.send(
-            embed=make_embed("Bad argument!", f"```{error}```", DANGER_COLOR)
-        )
-    else:
-        await ctx.send(
-            embed=make_embed("Uncaught error!", f"```{error}```", DANGER_COLOR)
-        )
-
-        raise error
 
 
 if __name__ == "__main__":

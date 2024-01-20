@@ -2,8 +2,10 @@ from hooks.aiohttp.make_request import make_request
 from const import SERVER_URL
 
 
-async def read_history():
-    return await make_request(f"{SERVER_URL}/bot/histories")
+async def read_history(start, amount, order="desc"):
+    return await make_request(
+        f"{SERVER_URL}/bot/histories?start={start}&amount={amount}&order={order}"
+    )
 
 
 async def read_one_history(history_id):

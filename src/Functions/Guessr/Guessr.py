@@ -5,7 +5,7 @@ from typing import Literal, Optional
 from discord import app_commands
 from discord.ext import commands
 
-from utils.game.lb import update_user_stats
+from utils.game.lb import update_user_statistic
 from utils.game.chambers import (
     get_chambers,
     get_random_chambers,
@@ -30,6 +30,15 @@ from const import (
 
 
 class Guessr(commands.Cog):
+    """Cog for guessr related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+
+    Raises:
+        commands.CommandError: In the case of error, this cog will raise commands.CommandError exception.
+    """
+
     active_game_channels = set()
 
     def __init__(self, bot: commands.Bot):
@@ -247,7 +256,7 @@ class Guessr(commands.Cog):
                             game_log["user_ids_correct"].append(str(response.author.id))
 
                             await response.add_reaction("✅")
-                            await update_user_stats(
+                            await update_user_statistic(
                                 response.author.id, guessr_difficulty
                             )
 

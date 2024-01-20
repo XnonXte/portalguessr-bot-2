@@ -17,12 +17,19 @@ from utils.owner.check_server import check_is_testing_server
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
 from hooks.discord.get_user import get_user
+from hooks.python.use_enumerate import use_enumerate
 from utils.bot.make_icon import make_icon
 from utils.submission.get_color_by_status import get_color_by_status
 from const import BOT_COLOR, MAX_AMOUNT, SUBMISSION_CHANNEL_ID
 
 
 class Submission(commands.Cog):
+    """Cog for submission related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -107,7 +114,7 @@ class Submission(commands.Cog):
         submission_id="Shows the detail for a specific submission with its ID.",
         status="Searches submissions by their status (defaults to 'All').",
         start="The starting index (one-based index).",
-        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT}",
+        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT})",
     )
     async def submissions(
         self,
@@ -158,78 +165,57 @@ class Submission(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            submissions = (
-                await read_submission_by_status(status.lower())
-                if status != "All"
-                else await read_submission()
-            )
-            submissions_length = len(submissions)
-
             if amount > MAX_AMOUNT:
                 await ctx.send(
-                    f"Amount value can't exceed {MAX_AMOUNT}!",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_AMOUNT}",
                     ephemeral=True,
                 )
 
                 return
             elif amount <= 0:
                 await ctx.send(
-                    "Amount value can't be less than or equal to 0!", ephemeral=True
+                    "The amount value can't be less than or equal to 0!", ephemeral=True
                 )
 
                 return
 
-            if submissions_length != 0:
-                if start > submissions_length:
-                    await ctx.send(
-                        f"Start value cannot exceed {submissions_length}!",
-                        ephemeral=True,
-                    )
-
-                    return
-                elif start <= 0:
-                    await ctx.send(
-                        "Starting index cannot be less than or equal to 0!",
-                        ephemeral=True,
-                    )
-
-                    return
-
-            adjusted_amount = (
-                (start + amount) - 1
-                if not start + amount > submissions_length
-                else submissions_length
-            )
-            adjusted_end_index = (
-                adjusted_amount if start != submissions_length else adjusted_amount + 1
-            )
-            submissions_reversed = submissions[::-1]
-            submissions_entry = []
-
-            for index, submission in enumerate(submissions_reversed, start=1):
-                submitter_mention = await get_user_mention(
-                    self.bot, submission["submitter"]
+            if start <= 0:
+                await ctx.send(
+                    "The starting number can't be less than or equal to 0!",
+                    ephemeral=True,
                 )
 
-                entry_message = f"{index}. Submitted by {submitter_mention}, created at • <t:{submission['createdStamp']}:F>\n**{submission['status'].capitalize()}** status, **{submission['difficulty']}** difficulty | ID: `{submission['submissionId']}`"
+                return
+
+            submissions = (
+                await read_submission_by_status(status.lower(), start, amount)
+                if status != "All"
+                else await read_submission(start, amount)
+            )
+
+            submissions_entry = []
+
+            async def callback(index, item):
+                submitter_mention = await get_user_mention(self.bot, item["submitter"])
+                entry_message = f"{index}. Submitted by {submitter_mention}, created at • <t:{item['createdStamp']}:F>\n**{item['status'].capitalize()}** status, **{item['difficulty']}** difficulty | ID: `{item['submissionId']}`"
+
                 submissions_entry.append(entry_message)
 
-            data_entry = submissions_entry[start - 1 : adjusted_end_index]
-            data_entry_length = len(data_entry)
-            embed_description = "\n\n".join(data_entry) or "Empty :("
+            await use_enumerate(submissions, callback, start)
+
+            embed_description = "\n\n".join(submissions_entry) or "Empty :("
             embed_title = (
                 f"Submissions with {status.lower()} status"
                 if status != "All"
                 else "All Submissions"
             )
-
             embed = make_embed(
                 embed_title,
                 embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"Showing {data_entry_length} out of {submissions_length} total.",
+                text=f"Limiting results to {amount} | Starting at {start}",
                 icon_url="attachment://icon.png",
             )
 

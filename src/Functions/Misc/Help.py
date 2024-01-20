@@ -14,6 +14,12 @@ from utils.help.buttons import HelpViews
 
 
 class Help(commands.Cog):
+    """Cog for help related command.
+
+    Args:
+        commands (commands.Bot): The bot's instance.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
