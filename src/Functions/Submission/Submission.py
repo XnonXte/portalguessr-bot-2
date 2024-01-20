@@ -82,7 +82,7 @@ class Submission(commands.Cog):
 
         await ctx.defer()
 
-        uploaded_image_url = await upload_image(image.url, image.filename)
+        uploaded_image_url = await upload_image(image.url)
         submission_id = (
             await submit_submission(
                 uploaded_image_url, difficulty, answer, str(ctx.author.id), ""
