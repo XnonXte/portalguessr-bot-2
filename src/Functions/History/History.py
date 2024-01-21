@@ -10,7 +10,7 @@ from hooks.discord.get_user import get_user
 from hooks.python.use_enumerate import use_enumerate
 from utils.game.history import read_history, read_one_history
 from utils.bot.make_icon import make_icon
-from const import BOT_COLOR, MAX_AMOUNT
+from const import BOT_COLOR, MAX_LIMIT, DEFAULT_LIMIT
 
 
 class History(commands.Cog):
@@ -28,15 +28,15 @@ class History(commands.Cog):
     )
     @app_commands.describe(
         history_id="Targets a specific game from history with its ID.",
-        start="The starting index (one-based index).",
-        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT})",
+        skip="Skip to the given number (defaults to 1).",
+        limit=f"The total amount that needs to be displayed (defaults to {DEFAULT_LIMIT}, {MAX_LIMIT} maximum)",
     )
     async def history(
         self,
         ctx,
         history_id: Optional[str],
-        start: Optional[int] = 1,
-        amount: Optional[int] = 10,
+        skip: Optional[int] = 1,
+        limit: Optional[int] = DEFAULT_LIMIT,
     ):
         await ctx.defer()
 
@@ -75,21 +75,21 @@ class History(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            if amount > MAX_AMOUNT:
+            if limit > MAX_LIMIT:
                 await ctx.send(
-                    f"Exceeded the maximum value for amount! The maximum value is {MAX_AMOUNT}",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_LIMIT}",
                     ephemeral=True,
                 )
 
                 return
-            elif amount <= 0:
+            elif limit <= 0:
                 await ctx.send(
                     "The amount value can't be less than or equal to 0!", ephemeral=True
                 )
 
                 return
 
-            if start <= 0:
+            if skip <= 0:
                 await ctx.send(
                     "The starting number can't be less than or equal to 0!",
                     ephemeral=True,
@@ -97,7 +97,7 @@ class History(commands.Cog):
 
                 return
 
-            history = await read_history(start, amount)
+            history = await read_history(skip, limit)
             history_entry = []
 
             async def callback(index, item):
@@ -108,16 +108,21 @@ class History(commands.Cog):
                     f"{index}. Prompted by {prompter_mention} - **{item['difficulty']}** difficulty\nfinished at • <t:{item['createdStamp']}:F> | ID: `{item['historyId']}`"
                 )
 
-            await use_enumerate(history, callback, start)
+            await use_enumerate(history, callback, skip)
 
             embed_description = "\n\n".join(history_entry) or "Empty :("
+            embed_footer = (
+                f"Limiting results to {limit} | Skipping from {skip}"
+                if skip != 1
+                else f"Limiting results to {limit}"
+            )
             embed = make_embed(
                 "Game History",
                 embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"Limiting results to {amount} | Starting at {start}",
+                text=embed_footer,
                 icon_url="attachment://icon.png",
             )
 

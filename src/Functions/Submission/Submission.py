@@ -20,7 +20,7 @@ from hooks.discord.get_user import get_user
 from hooks.python.use_enumerate import use_enumerate
 from utils.bot.make_icon import make_icon
 from utils.submission.get_color_by_status import get_color_by_status
-from const import BOT_COLOR, MAX_AMOUNT, SUBMISSION_CHANNEL_ID
+from const import BOT_COLOR, MAX_LIMIT, DEFAULT_LIMIT, SUBMISSION_CHANNEL_ID
 
 
 class Submission(commands.Cog):
@@ -113,16 +113,16 @@ class Submission(commands.Cog):
     @app_commands.describe(
         submission_id="Shows the detail for a specific submission with its ID.",
         status="Searches submissions by their status (defaults to 'All').",
-        start="The starting index (one-based index).",
-        amount=f"The total amount that needs to be displayed (max: {MAX_AMOUNT})",
+        skip="Skip to the given number (defaults to 1).",
+        limit=f"The total amount that needs to be displayed (defaults to {DEFAULT_LIMIT}, {MAX_LIMIT} maximum)",
     )
     async def submissions(
         self,
         ctx,
         submission_id: Optional[str] = "",
         status: Optional[Literal["Pending", "Accepted", "Rejected", "All"]] = "All",
-        start: Optional[int] = 1,
-        amount: Optional[int] = 10,
+        skip: Optional[int] = 1,
+        limit: Optional[int] = DEFAULT_LIMIT,
     ):
         await ctx.defer()
 
@@ -165,21 +165,21 @@ class Submission(commands.Cog):
 
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            if amount > MAX_AMOUNT:
+            if limit > MAX_LIMIT:
                 await ctx.send(
-                    f"Exceeded the maximum value for amount! The maximum value is {MAX_AMOUNT}",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_LIMIT}",
                     ephemeral=True,
                 )
 
                 return
-            elif amount <= 0:
+            elif limit <= 0:
                 await ctx.send(
                     "The amount value can't be less than or equal to 0!", ephemeral=True
                 )
 
                 return
 
-            if start <= 0:
+            if skip <= 0:
                 await ctx.send(
                     "The starting number can't be less than or equal to 0!",
                     ephemeral=True,
@@ -188,9 +188,9 @@ class Submission(commands.Cog):
                 return
 
             submissions = (
-                await read_submission_by_status(status.lower(), start, amount)
+                await read_submission_by_status(status.lower(), skip, limit)
                 if status != "All"
-                else await read_submission(start, amount)
+                else await read_submission(skip, limit)
             )
 
             submissions_entry = []
@@ -201,7 +201,7 @@ class Submission(commands.Cog):
 
                 submissions_entry.append(entry_message)
 
-            await use_enumerate(submissions, callback, start)
+            await use_enumerate(submissions, callback, skip)
 
             embed_description = "\n\n".join(submissions_entry) or "Empty :("
             embed_title = (
@@ -209,13 +209,18 @@ class Submission(commands.Cog):
                 if status != "All"
                 else "All Submissions"
             )
+            embed_footer = (
+                f"Limiting results to {limit} | Skipping from {skip}"
+                if skip != 1
+                else f"Limiting results to {limit}"
+            )
             embed = make_embed(
                 embed_title,
                 embed_description,
                 BOT_COLOR,
             )
             embed.set_footer(
-                text=f"Limiting results to {amount} | Starting at {start}",
+                text=embed_footer,
                 icon_url="attachment://icon.png",
             )
 
