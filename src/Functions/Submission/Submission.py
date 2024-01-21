@@ -210,9 +210,9 @@ class Submission(commands.Cog):
                 else "All Submissions"
             )
             embed_footer = (
-                f"Limiting results to {limit} | Skipping from {skip}"
+                f"Showing {limit} results | Skipping from {skip}"
                 if skip != 1
-                else f"Limiting results to {limit}"
+                else f"Showing {limit} results "
             )
             embed = make_embed(
                 embed_title,

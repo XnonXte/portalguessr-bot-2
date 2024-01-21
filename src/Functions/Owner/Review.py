@@ -32,34 +32,24 @@ class Review(commands.Cog):
         name="review",
         description="Starts a review session for pending submissions (owner only command).",
     )
-    @app_commands.describe(amount="The amount of submissions you want to review.")
-    async def review(self, ctx, amount: Optional[int] = 0):
+    @app_commands.describe(
+        limit="The amount of submissions you want to review (defaults to 10)."
+    )
+    async def review(self, ctx, limit: Optional[int] = 10):
         check_is_owner(ctx.author.id)
 
-        await ctx.defer()
-
-        submissions = await read_submission_by_status("pending")
-        submissions_length = len(submissions)
-
-        if submissions_length == 0:
-            await ctx.send("Submissions with pending status are empty!", ephemeral=True)
-
-            return
-
-        if amount > submissions_length:
+        if limit <= 0:
             await ctx.send(
-                f"There are currently {submissions_length} submissions with pending status, you can't go higher than that!",
-                ephemeral=True,
+                "The amount value can't be less than or equal to 0!", ephemeral=True
             )
 
             return
 
-        submissions_reversed = submissions[::-1]
-        limit_submissions_if_specified = (
-            submissions_reversed[:amount] if amount != 0 else submissions_reversed
-        )
+        await ctx.defer()
 
-        for index, submission in enumerate(limit_submissions_if_specified, start=1):
+        submissions = await read_submission_by_status("pending", 1, limit)
+
+        for index, submission in enumerate(submissions, start=1):
             submitter = await get_user(self.bot, submission["submitter"])
             submitter_name = submitter.name if submitter != None else "N/A"
             submitter_avatar = (
@@ -83,7 +73,7 @@ class Review(commands.Cog):
             embed.set_image(url=submission["url"])
             embed.set_author(name=submitter_name, icon_url=submitter_avatar)
             embed.set_footer(
-                text=f"Submission {index} of {amount or submissions_length} - ID: {submission['submissionId']} | Created at • {formatted_time}",
+                text=f"Submission {index} of {len(submissions)} - ID: {submission['submissionId']} | Created at • {formatted_time}",
                 icon_url="attachment://icon.png",
             )
 

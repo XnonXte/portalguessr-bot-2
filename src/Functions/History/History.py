@@ -112,9 +112,9 @@ class History(commands.Cog):
 
             embed_description = "\n\n".join(history_entry) or "Empty :("
             embed_footer = (
-                f"Limiting results to {limit} | Skipping from {skip}"
+                f"Showing {limit} results | Skipping from {skip}"
                 if skip != 1
-                else f"Limiting results to {limit}"
+                else f"Showing {limit} results "
             )
             embed = make_embed(
                 "Game History",
