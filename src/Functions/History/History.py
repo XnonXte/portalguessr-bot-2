@@ -98,6 +98,7 @@ class History(commands.Cog):
                 return
 
             history = await read_history(skip, limit)
+            history_length = len(history)
             history_entry = []
 
             async def callback(index, item):
@@ -112,9 +113,9 @@ class History(commands.Cog):
 
             embed_description = "\n\n".join(history_entry) or "Empty :("
             embed_footer = (
-                f"Showing {limit} results | Skipping from {skip}"
+                f"Showing {history_length} results | Skipping from {skip}"
                 if skip != 1
-                else f"Showing {limit} results "
+                else f"Showing {history_length} results "
             )
             embed = make_embed(
                 "Game History",

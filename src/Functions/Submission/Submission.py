@@ -192,6 +192,7 @@ class Submission(commands.Cog):
                 if status != "All"
                 else await read_submission(skip, limit)
             )
+            submissions_length = len(submissions)
 
             submissions_entry = []
 
@@ -210,9 +211,9 @@ class Submission(commands.Cog):
                 else "All Submissions"
             )
             embed_footer = (
-                f"Showing {limit} results | Skipping from {skip}"
+                f"Showing {submissions_length} results | Skipping from {skip}"
                 if skip != 1
-                else f"Showing {limit} results "
+                else f"Showing {submissions_length} results "
             )
             embed = make_embed(
                 embed_title,

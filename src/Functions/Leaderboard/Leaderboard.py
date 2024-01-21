@@ -134,6 +134,7 @@ class Leaderboard(commands.Cog):
                 return
 
             statistics = await get_statistics(skip, limit)
+            statistics_length = len(statistics)
             statistic_entry = []
 
             async def callback(index, item):
@@ -148,9 +149,9 @@ class Leaderboard(commands.Cog):
 
             embed_description = "\n".join(statistic_entry) or "Empty :("
             embed_footer = (
-                f"Showing {limit} results | Skipping from {skip}"
+                f"Showing {statistics_length} results | Skipping from {skip}"
                 if skip != 1
-                else f"Showing {limit} results "
+                else f"Showing {statistics_length} results "
             )
             embed = make_embed(
                 "Leaderboard",
