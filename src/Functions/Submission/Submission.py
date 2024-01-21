@@ -20,14 +20,7 @@ from hooks.discord.get_user import get_user
 from hooks.python.use_enumerate import use_enumerate
 from utils.bot.make_icon import make_icon
 from utils.submission.get_color_by_status import get_color_by_status
-from const import (
-    BOT_COLOR,
-    MAX_LIMIT,
-    DEFAULT_LIMIT,
-    SUBMISSION_CHANNEL_ID,
-    AVAILABLE_CHAMBERS,
-    AVAILABLE_DIFFICULTIES,
-)
+from const import BOT_COLOR, MAX_LIMIT, DEFAULT_LIMIT, SUBMISSION_CHANNEL_ID
 
 
 class Submission(commands.Cog):
@@ -52,8 +45,32 @@ class Submission(commands.Cog):
         self,
         ctx,
         image: discord.Attachment,
-        difficulty: AVAILABLE_DIFFICULTIES,
-        answer: AVAILABLE_CHAMBERS,
+        difficulty: Literal["Easy", "Medium", "Hard", "Very Hard"],
+        answer: Literal[
+            "00",
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "e00",
+            "e01",
+            "e02",
+        ],
     ):
         check_is_testing_server(ctx.guild.id)
 

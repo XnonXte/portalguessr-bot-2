@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from discord.ext import commands
 from discord import app_commands
@@ -13,12 +13,7 @@ from utils.submission.submission import (
     accept_submission,
 )
 from utils.bot.make_icon import make_icon
-from const import (
-    BOT_COLOR,
-    DEFAULT_FOOTER_TEXT,
-    AVAILABLE_CHAMBERS,
-    AVAILABLE_DIFFICULTIES,
-)
+from const import BOT_COLOR, DEFAULT_FOOTER_TEXT
 
 
 class Owner(commands.Cog):
@@ -184,8 +179,32 @@ class Owner(commands.Cog):
         self,
         ctx,
         submission_id: str,
-        difficulty: AVAILABLE_DIFFICULTIES,
-        answer: AVAILABLE_CHAMBERS,
+        difficulty: Literal["Easy", "Medium", "Hard", "Very Hard"],
+        answer: Literal[
+            "00",
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "e00",
+            "e01",
+            "e02",
+        ],
     ):
         check_is_owner(ctx.author.id)
         await ctx.defer()
