@@ -33,14 +33,14 @@ async def remove_statistic(user_id):
 
 
 async def update_user_statistic(user_id, difficulty):
-    user_data = await get_statistics(user_id)
+    statistic = await get_statistic(user_id)
 
-    if user_data == None:
+    if statistic == None:
         initial_scores = {"Easy": 0, "Medium": 0, "Hard": 0, "Very Hard": 0}
         initial_scores[difficulty] += 1
 
         await add_statistic(user_id, {"scores": initial_scores})
     else:
-        user_data["scores"][difficulty] += 1
+        statistic["scores"][difficulty] += 1
 
-        await update_statistic(user_id, user_data)
+        await update_statistic(user_id, statistic)
