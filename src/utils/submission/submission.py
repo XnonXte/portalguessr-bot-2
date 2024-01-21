@@ -36,14 +36,22 @@ async def read_one_submission(submission_id):
     return await make_request(url)
 
 
-async def update_submission(submission_id, status):
+async def update_submission(submission_id, difficulty, answer):
+    url = f"{SERVER_URL}/bot/submissions/{submission_id}"
+
+    return await make_request(
+        url, "PATCH", {"difficulty": difficulty, "answer": answer}
+    )
+
+
+async def update_submission_status(submission_id, status):
     url = f"{SERVER_URL}/bot/submissions/{submission_id}"
 
     return await make_request(url, "PATCH", {"status": status})
 
 
 async def accept_submission(submission_id):
-    response = await update_submission(submission_id, "accepted")
+    response = await update_submission_status(submission_id, "accepted")
 
     if response == None:
         raise Exception(f"Not found submission ID: {submission_id}!")

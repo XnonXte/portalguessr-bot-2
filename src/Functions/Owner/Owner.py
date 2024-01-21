@@ -1,6 +1,5 @@
-from typing import Optional, Literal
+from typing import Optional
 
-import discord
 from discord.ext import commands
 from discord import app_commands
 
@@ -8,11 +7,17 @@ from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
 from utils.game.lb import add_statistic, remove_statistic
 from utils.owner.check_id import check_is_owner
-from utils.submission.submission import update_submission, accept_submission
+from utils.submission.submission import (
+    update_submission_status,
+    update_submission,
+    accept_submission,
+)
 from utils.bot.make_icon import make_icon
 from const import (
     BOT_COLOR,
     DEFAULT_FOOTER_TEXT,
+    AVAILABLE_CHAMBERS,
+    AVAILABLE_DIFFICULTIES,
 )
 
 
@@ -117,7 +122,7 @@ class Owner(commands.Cog):
         await ctx.defer()
 
         try:
-            result = await update_submission(submission_id, "rejected")
+            result = await update_submission_status(submission_id, "rejected")
 
             if result == None:
                 raise commands.BadArgument(
@@ -171,22 +176,36 @@ class Owner(commands.Cog):
         except Exception as e:
             raise commands.CommandError(e)
 
-    @commands.command()
-    @commands.is_owner()
-    async def sync(self, ctx, scope: Optional[Literal["*", ".", "-"]] = "*"):
-        if scope == "*":
-            synced = await ctx.bot.tree.sync()
-        elif scope == "-":
-            ctx.bot.tree.clear_commands(guild=ctx.guild)
-            await ctx.bot.tree.sync(guild=ctx.guild)
-            synced = []
-        else:
-            ctx.bot.tree.copy_global_to(guild=ctx.guild)
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+    @commands.hybrid_command(
+        name="edit", description="Edit a submission (owner only command)."
+    )
+    @app_commands.describe(submission_id="Target a submission to edit with its ID.")
+    async def edit(
+        self,
+        ctx,
+        submission_id: str,
+        difficulty: AVAILABLE_DIFFICULTIES,
+        answer: AVAILABLE_CHAMBERS,
+    ):
+        check_is_owner(ctx.author.id)
+        await ctx.defer()
 
-        await ctx.send(
-            f"Synced {len(synced)} commands {'globally' if scope == '*' else 'to the current guild.'}"
-        )
+        try:
+            await update_submission(submission_id, difficulty, answer)
+
+            embed = make_embed(
+                "Submission Updated!",
+                f"Submission with ID {submission_id} has been updated!",
+                BOT_COLOR,
+            )
+            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
+
+            await ctx.send(
+                embed=embed,
+                file=make_icon(),
+            )
+        except Exception as e:
+            raise commands.CommandError(e)
 
 
 async def setup(bot):

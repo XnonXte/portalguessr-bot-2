@@ -1,3 +1,5 @@
+from typing import Literal
+
 import discord
 
 # Bot's constants.
@@ -86,3 +88,33 @@ DEFAULT_LIMIT = 10
 # P1SR constants.
 P1SR_GUILD_ID = 305456639530500096
 P1SR_SPAM_CHANNEL_ID = 1194331587081424996
+
+# Literal constants.
+AVAILABLE_CHAMBERS = (
+    Literal[
+        "00",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "e00",
+        "e01",
+        "e02",
+    ],
+)
+AVAILABLE_DIFFICULTIES = Literal["Easy", "Medium", "Hard", "Very Hard"]

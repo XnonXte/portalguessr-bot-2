@@ -9,7 +9,7 @@ from hooks.discord.get_user_mention import get_user_mention
 from hooks.discord.get_user import get_user
 from utils.submission.submission import (
     read_submission_by_status,
-    update_submission,
+    update_submission_status,
     accept_submission,
 )
 from utils.owner.check_id import check_is_owner
@@ -119,7 +119,7 @@ class Review(commands.Cog):
                         and m.channel.id == ctx.channel.id,
                     )
 
-                    result = await update_submission(
+                    result = await update_submission_status(
                         submission["submissionId"], "rejected"
                     )
 
