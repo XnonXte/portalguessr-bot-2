@@ -11,6 +11,15 @@ This is a major rewrite of the original [PortalGuessr bot](https://github.com/Xn
 - Run the environment with `pipenv run python ./src/main.py`.
 - Enjoy! Let me know of what you think of it!
 
+## Installation using docker
+
+- Install latest docker
+- Create a `config.env` file containing `TOKEN`, `API_KEY` and `IMGBB_API_KEY` variables (get your own imgbb's API key at: https://imgbb.com/).
+- Run `docker build -t XnonXte/portalguessr-bot-2 .` to build the container image. Keep in mind that your configuration will be baked into the container image!
+
+- To start the container use `docker run -d XnonXte/portalguessr-bot-2`
+
+
 ## Possible FAQs
 
 - Q: How does the bot calculate ELO in `/lb`?
