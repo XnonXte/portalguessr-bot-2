@@ -1,5 +1,5 @@
 from hooks.aiohttp.make_request import make_request
-from const import SERVER_URL
+from config import SERVER_URL
 
 
 async def read_history(start, amount, order="desc"):
@@ -35,11 +35,9 @@ async def add_history(
         "difficulty": difficulty,
     }
     response = await make_request(f"{SERVER_URL}/bot/histories", "POST", data)
-
-    return response["historyId"]  # Returns the history's id.
+    return response["historyId"]
 
 
 async def remove_history(historyId):
     response = await make_request(f"{SERVER_URL}/histories/{historyId}", "DELETE")
-
     return response["acknowledged"] == True

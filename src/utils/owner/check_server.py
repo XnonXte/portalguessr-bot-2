@@ -1,6 +1,5 @@
 from discord.ext import commands
-
-from const import TESTING_SERVER_ID
+from config import TESTING_SERVER_ID
 
 
 def check_is_testing_server(server_id):

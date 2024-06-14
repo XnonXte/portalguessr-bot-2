@@ -1,8 +1,7 @@
 import os
-
 from hooks.aiohttp.make_request import make_request
 from utils.imgbb.generate_hex_id import generate_hex_id
-from const import IMGBB_SERVER_URL
+from config import IMGBB_SERVER_URL
 
 IMGBB_API_KEY = os.getenv("IMGBB_API_KEY")
 

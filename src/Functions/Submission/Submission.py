@@ -1,6 +1,5 @@
-from typing import Literal, Optional
 from datetime import datetime
-
+from typing import Literal, Optional
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -12,7 +11,6 @@ from utils.submission.submission import (
     read_submission,
     read_submission_by_status,
 )
-
 from utils.owner.check_server import check_is_testing_server
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
@@ -20,7 +18,12 @@ from hooks.discord.get_user import get_user
 from hooks.python.use_enumerate import use_enumerate
 from utils.bot.make_icon import make_icon
 from utils.submission.get_color_by_status import get_color_by_status
-from const import BOT_COLOR, MAX_LIMIT, DEFAULT_LIMIT, SUBMISSION_CHANNEL_ID
+from config import (
+    BOT_ACCENT_COLOR,
+    MAX_REQUEST_ENTRIES,
+    DEFAULT_REQUEST_ENTRIES,
+    SUBMISSION_CHANNEL_ID,
+)
 
 
 class Submission(commands.Cog):
@@ -73,34 +76,28 @@ class Submission(commands.Cog):
         ],
     ):
         check_is_testing_server(ctx.guild.id)
-
         if ctx.channel.id != SUBMISSION_CHANNEL_ID:
             await ctx.send(
                 f"This command is only permitted to be invoked in {ctx.guild.get_channel(SUBMISSION_CHANNEL_ID).mention}"
             )
-
         allowed_image_types = ["png", "jpeg", "jpg", "webp"]
         file_extension = image.filename.split(".")[-1].lower()
-
         if file_extension not in allowed_image_types:
             await ctx.send("Image type not supported!", ephemeral=True)
 
             return
-
         await ctx.defer()
-
         uploaded_image_url = await upload_image(image.url)
         submission_id = (
             await submit_submission(
                 uploaded_image_url, difficulty, answer, str(ctx.author.id), ""
             )
         )["submissionId"]
-
         await ctx.send(
             embed=make_embed(
                 "Success!",
                 f"Your submission is required to be checked first before it gets added to the game, we will notify you when there's an updated. Thanks for contributing! {ctx.author.mention}",
-                BOT_COLOR,
+                BOT_ACCENT_COLOR,
             ).set_footer(
                 text=f"Submission ID: {submission_id}", icon_url="attachment://icon.png"
             ),
@@ -114,7 +111,7 @@ class Submission(commands.Cog):
         submission_id="Shows the detail for a specific submission with its ID.",
         status="Searches submissions by their status (defaults to 'All').",
         skip="Skip to the given number (defaults to 1).",
-        limit=f"The total amount that needs to be displayed (defaults to {DEFAULT_LIMIT}, {MAX_LIMIT} maximum)",
+        limit=f"The total amount that needs to be displayed (defaults to {DEFAULT_REQUEST_ENTRIES}, {MAX_REQUEST_ENTRIES} maximum)",
     )
     async def submissions(
         self,
@@ -122,13 +119,11 @@ class Submission(commands.Cog):
         submission_id: Optional[str] = "",
         status: Optional[Literal["Pending", "Accepted", "Rejected", "All"]] = "All",
         skip: Optional[int] = 1,
-        limit: Optional[int] = DEFAULT_LIMIT,
+        limit: Optional[int] = DEFAULT_REQUEST_ENTRIES,
     ):
         await ctx.defer()
-
         if submission_id:
             submission = await read_one_submission(submission_id)
-
             if not submission:
                 raise commands.BadArgument(
                     f"{submission_id} is not a valid submission ID!"
@@ -162,12 +157,11 @@ class Submission(commands.Cog):
                     text=f"ID: {submission_id} | Created at • {formatted_time}",
                     icon_url="attachment://icon.png",
                 )
-
                 await ctx.send(embed=embed, file=make_icon())
         else:
-            if limit > MAX_LIMIT:
+            if limit > MAX_REQUEST_ENTRIES:
                 await ctx.send(
-                    f"Exceeded the maximum value for amount! The maximum value is {MAX_LIMIT}",
+                    f"Exceeded the maximum value for amount! The maximum value is {MAX_REQUEST_ENTRIES}",
                     ephemeral=True,
                 )
 
@@ -178,22 +172,18 @@ class Submission(commands.Cog):
                 )
 
                 return
-
             if skip <= 0:
                 await ctx.send(
                     "The starting number can't be less than or equal to 0!",
                     ephemeral=True,
                 )
-
                 return
-
             submissions = (
                 await read_submission_by_status(status.lower(), skip, limit)
                 if status != "All"
                 else await read_submission(skip, limit)
             )
             submissions_length = len(submissions)
-
             submissions_entry = []
 
             async def callback(index, item):
@@ -203,7 +193,6 @@ class Submission(commands.Cog):
                 submissions_entry.append(entry_message)
 
             await use_enumerate(submissions, callback, skip)
-
             embed_description = "\n\n".join(submissions_entry) or "Empty :("
             embed_title = (
                 f"Submissions with {status.lower()} status"
@@ -218,13 +207,12 @@ class Submission(commands.Cog):
             embed = make_embed(
                 embed_title,
                 embed_description,
-                BOT_COLOR,
+                BOT_ACCENT_COLOR,
             )
             embed.set_footer(
                 text=embed_footer,
                 icon_url="attachment://icon.png",
             )
-
             await ctx.send(embed=embed, file=make_icon())
 
 

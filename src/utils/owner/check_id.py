@@ -1,6 +1,5 @@
 from discord.ext import commands
-
-from const import OWNER_USER_ID
+from config import OWNER_USER_ID
 
 
 def check_is_owner(ctx_id):

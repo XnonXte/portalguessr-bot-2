@@ -1,5 +1,4 @@
 from typing import Optional, Literal
-
 from discord.ext import commands
 
 
@@ -25,7 +24,6 @@ class Sync(commands.Cog):
         else:
             ctx.bot.tree.copy_global_to(guild=ctx.guild)
             synced = await ctx.bot.tree.sync(guild=ctx.guild)
-
         await ctx.send(
             f"Synced {len(synced)} commands {'globally' if scope == '*' else 'to the current guild.'}"
         )

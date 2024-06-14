@@ -1,13 +1,12 @@
 from discord.ext import commands
-
 from hooks.discord.make_embed import make_embed
 from utils.bot.make_icon import make_icon
-from const import (
+from config import (
     GENERAL_COMMANDS,
     OWNER_COMMANDS,
-    BOT_COLOR,
+    BOT_ACCENT_COLOR,
     BOT_PREFIX,
-    DEFAULT_FOOTER_TEXT,
+    BOT_FOOTER_TEXT,
     GITHUB_URL,
 )
 from utils.help.buttons import HelpViews
@@ -33,10 +32,9 @@ class Help(commands.Cog):
         owner_commands_entry = [
             f"`{key}` - {OWNER_COMMANDS[key]}" for key in OWNER_COMMANDS
         ]
-
         embed = make_embed(
             description=f"My command is available to both the prefix `{BOT_PREFIX}` command and the slash command!",
-            color=BOT_COLOR,
+            color=BOT_ACCENT_COLOR,
         )
         embed.add_field(
             name="General Commands",
@@ -51,8 +49,7 @@ class Help(commands.Cog):
         embed.set_author(
             name="About PortalGuessr", url=GITHUB_URL, icon_url="attachment://icon.png"
         )
-        embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
-
+        embed.set_footer(text=BOT_FOOTER_TEXT, icon_url="attachment://icon.png")
         await ctx.send(embed=embed, file=make_icon(), view=HelpViews(), ephemeral=True)
 
 

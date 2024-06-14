@@ -1,8 +1,6 @@
 from typing import Optional, Literal
-
 from discord.ext import commands
 from discord import app_commands
-
 from hooks.discord.make_embed import make_embed
 from hooks.discord.get_user_mention import get_user_mention
 from utils.game.lb import add_statistic, remove_statistic
@@ -13,7 +11,7 @@ from utils.submission.submission import (
     accept_submission,
 )
 from utils.bot.make_icon import make_icon
-from const import BOT_COLOR, DEFAULT_FOOTER_TEXT
+from config import BOT_ACCENT_COLOR, BOT_FOOTER_TEXT
 
 
 class Owner(commands.Cog):
@@ -48,7 +46,6 @@ class Owner(commands.Cog):
     ):
         check_is_owner(ctx.author.id)
         await ctx.defer()
-
         data = {
             "scores": {
                 "Easy": easy_count,
@@ -57,18 +54,18 @@ class Owner(commands.Cog):
                 "Very Hard": very_hard_count,
             }
         }
-
         try:
             result = await add_statistic(user_id, data)
             user_mention = await get_user_mention(self.bot, user_id)
 
             embed = make_embed(
-                "Success!", f"Stats for {user_mention} has been created!", BOT_COLOR
+                "Success!",
+                f"Stats for {user_mention} has been created!",
+                BOT_ACCENT_COLOR,
             )
             embed.set_footer(
                 text=f"Database ID: {result['_id']}", icon_url="attachment://icon.png"
             )
-
             await ctx.send(embed=embed, file=make_icon())
         except Exception as e:
             raise commands.CommandError(e)
@@ -81,24 +78,18 @@ class Owner(commands.Cog):
     async def lb_rm(self, ctx, user_id: str):
         check_is_owner(ctx.author.id)
         await ctx.defer()
-
         try:
             result = await remove_statistic(int(user_id))
-
             if result["deletedCount"] == 0:
                 raise commands.UserNotFound(user_id)
             else:
                 user_mention = await get_user_mention(self.bot, user_id)
-
                 embed = make_embed(
                     "Success!",
                     f"{user_mention} stats in the leaderboard has been removed!!",
-                    BOT_COLOR,
+                    BOT_ACCENT_COLOR,
                 )
-                embed.set_footer(
-                    text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png"
-                )
-
+                embed.set_footer(text=BOT_FOOTER_TEXT, icon_url="attachment://icon.png")
                 await ctx.send(embed=embed, file=make_icon())
         except Exception as e:
             raise commands.CommandError(e)
@@ -115,10 +106,8 @@ class Owner(commands.Cog):
     ):
         check_is_owner(ctx.author.id)
         await ctx.defer()
-
         try:
             result = await update_submission_status(submission_id, "rejected")
-
             if result == None:
                 raise commands.BadArgument(
                     f"{submission_id} is not a valid submission ID!"
@@ -126,14 +115,11 @@ class Owner(commands.Cog):
             else:
                 embed = make_embed(
                     "Submission Rejected!",
-                    color=BOT_COLOR,
+                    color=BOT_ACCENT_COLOR,
                 )
                 embed.add_field(name="Submission ID", value=result["submissionId"])
                 embed.add_field(name="Reason", value=reason.content)
-                embed.set_footer(
-                    text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png"
-                )
-
+                embed.set_footer(text=BOT_FOOTER_TEXT, icon_url="attachment://icon.png")
                 await ctx.send(
                     embed=embed,
                     file=make_icon(),
@@ -148,13 +134,11 @@ class Owner(commands.Cog):
     async def accept(self, ctx, submission_id: str):
         check_is_owner(ctx.author.id)
         await ctx.defer()
-
         try:
             result = await accept_submission(submission_id)
-
             embed = make_embed(
                 "Submission Accepted!",
-                color=BOT_COLOR,
+                color=BOT_ACCENT_COLOR,
             )
             embed.add_field(
                 name="Submission ID",
@@ -162,7 +146,7 @@ class Owner(commands.Cog):
                 inline=False,
             )
             embed.add_field(name="Chamber ID", value=result["fileId"], inline=False)
-            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
+            embed.set_footer(text=BOT_FOOTER_TEXT, icon_url="attachment://icon.png")
 
             await ctx.send(
                 embed=embed,
@@ -208,17 +192,14 @@ class Owner(commands.Cog):
     ):
         check_is_owner(ctx.author.id)
         await ctx.defer()
-
         try:
             await update_submission(submission_id, difficulty, answer)
-
             embed = make_embed(
                 "Submission Updated!",
                 f"Submission with ID {submission_id} has been updated!",
-                BOT_COLOR,
+                BOT_ACCENT_COLOR,
             )
-            embed.set_footer(text=DEFAULT_FOOTER_TEXT, icon_url="attachment://icon.png")
-
+            embed.set_footer(text=BOT_FOOTER_TEXT, icon_url="attachment://icon.png")
             await ctx.send(
                 embed=embed,
                 file=make_icon(),

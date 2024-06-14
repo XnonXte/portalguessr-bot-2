@@ -1,7 +1,6 @@
 from discord.ext import commands
-
 from hooks.discord.make_embed import make_embed
-from const import DANGER_COLOR, DISCORD_INVITE, BOT_PREFIX
+from config import DANGER_COLOR, DISCORD_INVITE, BOT_PREFIX
 
 
 class Error(commands.Cog):
@@ -62,7 +61,6 @@ class Error(commands.Cog):
             await ctx.send(
                 embed=make_embed("Uncaught error!", f"```{error}```", DANGER_COLOR)
             )
-
             raise error
 
 

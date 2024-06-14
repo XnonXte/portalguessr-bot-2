@@ -1,6 +1,5 @@
 import discord
-
-from const import DISCORD_INVITE, INVITE_URL
+from config import DISCORD_INVITE, INVITE_URL
 
 
 class HelpViews(discord.ui.View):

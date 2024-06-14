@@ -1,7 +1,6 @@
-import aiohttp
 import os
-
-API_KEY = os.getenv("API_KEY")
+import aiohttp
+from config import API_KEY
 
 
 async def make_request(
@@ -14,9 +13,11 @@ async def make_request(
             json=json,
             params=params,
             data=data,
-            headers=headers
-            if method not in ["POST", "PATCH", "DELETE"]
-            else {"x-api-key": API_KEY},
+            headers=(
+                headers
+                if method not in ["POST", "PATCH", "DELETE"]
+                else {"x-api-key": API_KEY}
+            ),
         ) as response:
             if response.ok:
                 return await response.json()
